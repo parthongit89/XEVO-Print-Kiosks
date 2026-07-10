@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-PRINT - Select Language</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --font-main: 'SN Pro', sans-serif;
+            --font-rounded: 'M PLUS Rounded 1c', sans-serif;
+            --primary-red: #ff5e62;
+            --accent-yellow: #fde047;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            overflow: hidden;
+            cursor: default;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 80px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #000;
+        }
+
+        .lang-icon {
+            font-size: 2.5rem;
+        }
+
+        /* Language Cards Container */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .lang-card {
+            background-color: var(--primary-red);
+            height: 220px;
+            border-radius: 12px;
+            position: relative;
+            padding: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+            border: none;
+            text-align: left;
+        }
+
+        .lang-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 94, 98, 0.3);
+        }
+
+        .lang-card:active {
+            transform: scale(0.98);
+        }
+
+        .lang-name {
+            font-family: var(--font-main);
+            font-weight: 900;
+            font-size: 2.2rem;
+            color: #000;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Decorative Bubbles inside cards */
+        .bubble {
+            position: absolute;
+            background-color: var(--accent-yellow);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .bubble-lg { width: 100px; height: 100px; bottom: -20px; left: -10px; }
+        .bubble-md { width: 60px; height: 60px; bottom: 10px; left: 80px; }
+        .bubble-sm { width: 40px; height: 40px; bottom: 40px; left: 140px; }
+
+        /* Footer Section */
+        .footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+        }
+
+        .instruction {
+            font-size: 1.2rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instruction::before {
+            content: "•";
+            font-size: 1.5rem;
+        }
+
+        /* Audio Button */
+        .audio-btn {
+            background-color: var(--accent-yellow);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            outline: none;
+        }
+
+        .audio-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .audio-btn svg {
+            width: 35px;
+            height: 35px;
+            fill: #ff5e62;
+        }
+
+        .speaking {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Session Timeout Overlay */
+        #timeout-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #fff;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #timeout-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Fullscreen container ensure */
+        :fullscreen body {
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Session Timeout Overlay -->
+    <div id="timeout-overlay">
+        <img src="https://i.supaimg.com/d0495ff2-7a2f-426d-a287-7b3b2861a5ee/eab2b984-5640-4a77-a221-f6a3f18b0d50.jpg" alt="Session Expired">
+    </div>
+
+    <div class="header" id="main-content">
+        <h1>Select the language</h1>
+        <div class="lang-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+        </div>
+    </div>
+
+    <div class="cards-grid">
+        <!-- English -->
+        <button class="lang-card" onclick="selectLanguage('English')">
+            <span class="lang-name">ENGLISH</span>
+            <div class="bubble bubble-lg"></div>
+            <div class="bubble bubble-md"></div>
+            <div class="bubble bubble-sm"></div>
+        </button>
+
+        <!-- Hindi -->
+        <button class="lang-card" onclick="selectLanguage('Hindi')">
+            <span class="lang-name">HINDI</span>
+            <div class="bubble bubble-lg"></div>
+            <div class="bubble bubble-md"></div>
+            <div class="bubble bubble-sm"></div>
+        </button>
+
+        <!-- Marathi -->
+        <button class="lang-card" onclick="selectLanguage('Marathi')">
+            <span class="lang-name">MARATHI</span>
+            <div class="bubble bubble-lg"></div>
+            <div class="bubble bubble-md"></div>
+            <div class="bubble bubble-sm"></div>
+        </button>
+    </div>
+
+    <div class="footer">
+        <p class="instruction">Select your preferred language to continue.</p>
+        
+        <button class="audio-btn" id="voiceBtn" title="Listen to instructions">
+            <svg viewBox="0 0 24 24">
+                <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.01,19.86 21,16.28 21,12C21,7.72 18.01,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.02C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        const voiceBtn = document.getElementById('voiceBtn');
+        const timeoutOverlay = document.getElementById('timeout-overlay');
+        const elem = document.documentElement;
+        let isSpeaking = false;
+        let synth = window.speechSynthesis;
+
+        // Session Timer Logic
+        // 5 minutes = 300,000 ms
+        const SESSION_TIMEOUT = 5 * 60 * 1000; 
+        const REDIRECT_DELAY = 5000; // 5 seconds
+
+        const sessionTimer = setTimeout(() => {
+            // Show the error screen
+            timeoutOverlay.style.display = 'flex';
+            
+            // Speak a final message
+            speak("Session expired. Returning to home page.");
+
+            // Redirect after 5 seconds
+            setTimeout(() => {
+                window.location.href = 'welcome.html';
+            }, REDIRECT_DELAY);
+        }, SESSION_TIMEOUT);
+
+        // Fullscreen Logic
+        function openFullscreen() {
+            if (document.fullscreenElement) return;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // Trigger fullscreen on any interaction
+        document.addEventListener('click', openFullscreen);
+
+        // Voice Prompts Map
+        const voicePrompts = {
+            'English': {
+                select: "You have selected English.",
+                instruct: "Select your preferred language to continue. English, Hindi, or Marathi."
+            },
+            'Hindi': {
+                select: "आपने हिंदी भाषा चुनी है।",
+                instruct: "आगे बढ़ने के लिए अपनी पसंदीदा भाषा चुनें। अंग्रेजी, हिंदी या मराठी।"
+            },
+            'Marathi': {
+                select: "तुम्ही मराठी भाषा निवडली आहे।",
+                instruct: "पुढे जाण्यासाठी आपली आवडती भाषा निवडा। इंग्रजी, हिंदी किंवा मराठी।"
+            }
+        };
+
+        // Local Browser TTS Logic (Web Speech API)
+        function speak(text, langCode = 'en') {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voices = synth.getVoices();
+            
+            // Try to find a voice that matches the language code
+            let preferredVoice = voices.find(v => v.lang.startsWith(langCode));
+            if (!preferredVoice) {
+                // Fallback to standard female or English voice
+                preferredVoice = voices.find(v => 
+                    v.name.toLowerCase().includes('female') || 
+                    v.name.toLowerCase().includes('google us english') || 
+                    v.name.toLowerCase().includes('microsoft zira') ||
+                    v.name.toLowerCase().includes('samantha')
+                );
+            }
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+                utterance.lang = preferredVoice.lang;
+            } else {
+                utterance.lang = langCode;
+            }
+            
+            utterance.pitch = 1.0;
+            utterance.rate = 0.95;
+            utterance.onstart = () => {
+                isSpeaking = true;
+                voiceBtn.classList.add('speaking');
+            };
+            utterance.onend = () => {
+                isSpeaking = false;
+                voiceBtn.classList.remove('speaking');
+            };
+            utterance.onerror = () => {
+                isSpeaking = false;
+                voiceBtn.classList.remove('speaking');
+            };
+            synth.speak(utterance);
+        }
+
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = () => synth.getVoices();
+        }
+
+        function selectLanguage(lang) {
+            localStorage.setItem('selectedLanguage', lang);
+            
+            let langCode = 'en';
+            if (lang === 'Hindi') langCode = 'hi';
+            if (lang === 'Marathi') langCode = 'mr';
+            
+            const msg = voicePrompts[lang]?.select || `You selected ${lang}`;
+            speak(msg, langCode);
+            
+            console.log("Language selected:", lang);
+            
+            // Redirect after speech finishes or short delay
+            setTimeout(() => {
+                window.location.href = 'uploadprocess.html';
+            }, 1200);
+        }
+
+        voiceBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            speak(voicePrompts['English'].instruct, 'en');
+        });
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
