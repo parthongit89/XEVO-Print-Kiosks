@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to E-PRINT</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --font-main: 'SN Pro', sans-serif;
+            --font-title: 'Capriola', sans-serif;
+            --font-rounded: 'M PLUS Rounded 1c', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* Prevent text selection to feel like an app */
+            -webkit-user-drag: none;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: var(--font-main);
+            cursor: default;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-image: url('https://i.supaimg.com/d0495ff2-7a2f-426d-a287-7b3b2861a5ee/e6ab6924-7751-4535-91f2-32e87e5404e0.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-align: center;
+        }
+
+        .content {
+            z-index: 10;
+            padding: 20px;
+            margin-top: -50px;
+        }
+
+        h1 {
+            font-family: var(--font-title);
+            font-size: 4rem;
+            color: #000000;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+            font-weight: 900;
+        }
+
+        p {
+            font-family: var(--font-rounded);
+            font-size: 1.5rem;
+            color: #000000;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        .start-btn {
+            display: inline-block;
+            padding: 15px 80px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #000000;
+            text-decoration: none;
+            background: linear-gradient(90deg, #9333ea 0%, #facc15 100%);
+            border-radius: 50px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: none;
+            font-family: var(--font-rounded);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            outline: none;
+        }
+
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        .start-btn:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Decorative Arrow */
+        .arrow-container {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            pointer-events: none;
+        }
+
+        /* Fullscreen styles to ensure no gaps */
+        :fullscreen .container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            h1 { font-size: 3rem; }
+            p { font-size: 1.2rem; }
+            .start-btn { font-size: 1.6rem; padding: 12px 60px; }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            p { font-size: 1rem; }
+            .start-btn { font-size: 1.4rem; padding: 10px 50px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <div class="content">
+            <h1>Welcome to E-PRINT</h1>
+            <p>Click to Start button for printing !!</p>
+            
+            <button class="start-btn" id="startBtn" href="language.html">Start</button>
+        </div>
+
+        <div class="arrow-container">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M45,80 C40,60 50,40 70,30" fill="none" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round" />
+                <path d="M60,35 L72,28 L68,42" fill="none" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round" />
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const elem = document.documentElement;
+
+        // Function to enter fullscreen
+        function openFullscreen() {
+            if (document.fullscreenElement) return; // Already in fullscreen
+
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => console.log(err));
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // 1. Initial fullscreen attempt on ANY first click/touch on the page
+        document.addEventListener('click', function() {
+            openFullscreen();
+        }, { once: false });
+
+        // 2. Specific logic for the Start Button
+        startBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openFullscreen();
+            
+            // Clear previous session data from localStorage
+            localStorage.removeItem('session_id');
+            localStorage.removeItem('selectedLanguage');
+            localStorage.removeItem('selectedSource');
+
+            startBtn.innerText = 'Starting...';
+            startBtn.disabled = true;
+
+            // Start a new session on the backend
+            fetch('/api/session/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('session_id', data.session_id);
+                    // Navigate to language selection
+                    setTimeout(() => {
+                        window.location.href = 'language.html';
+                    }, 150);
+                } else {
+                    alert('Failed to start kiosk session. Please try again.');
+                    startBtn.innerText = 'Start';
+                    startBtn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error('Error starting session:', err);
+                // Fallback to local offline mode if backend is not running yet
+                localStorage.setItem('session_id', 'offline_session');
+                setTimeout(() => {
+                    window.location.href = 'language.html';
+                }, 150);
+            });
+        });
+
+        // Prevention of context menu to feel more like a native app
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Handle case where user might use keyboard to start
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                openFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
