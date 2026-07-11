@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-PRINT - Choose Device</title>
+    <!-- Tailwind and Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <style>
+        :root {
+            --font-main: 'Google Sans Flex', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            user-select: none;
+            -webkit-user-drag: none;
+            background-color: #ffffff;
+            cursor: default;
+        }
+
+        .speaking-btn {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col p-8 overflow-hidden select-none bg-white border-[16px] border-slate-100/80 rounded-[40px]">
+
+    <!-- Top Bar Header -->
+    <header class="flex justify-between items-center w-full mb-16">
+        <!-- Controls Box -->
+        <div class="flex items-center gap-2 border border-slate-200 rounded-2xl p-2 bg-white shadow-sm">
+            <!-- Close Button -->
+            <button onclick="abortSession()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Abort Session">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+            <!-- Audio Toggle Button -->
+            <button id="voiceBtn" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Listen instructions">
+                <span class="material-symbols-outlined text-xl">volume_up</span>
+            </button>
+            <!-- Contrast/Theme Toggle Button -->
+            <button onclick="alert('Touchscreen brightness set to maximum kiosk grade.')" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Toggle Theme">
+                <span class="material-symbols-outlined text-xl">light_mode</span>
+            </button>
+            <!-- Refresh Button -->
+            <button onclick="window.location.reload()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Refresh">
+                <span class="material-symbols-outlined text-xl">autorenew</span>
+            </button>
+            
+            <!-- Date Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[110px] text-center" id="date-box">
+                -- -- --
+            </div>
+            <!-- Time Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[130px] text-center" id="time-box">
+                -- : -- : -- --
+            </div>
+        </div>
+
+        <!-- Right Colored Dots -->
+        <div class="flex gap-2">
+            <div class="w-4 h-4 rounded-full bg-[#ff007f]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#7f00ff]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#007fff]"></div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-grow flex flex-col items-center max-w-6xl w-full mx-auto justify-center -mt-10">
+        <!-- Title -->
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-16 flex items-center gap-2">
+            <span id="title-text">Choose the Device</span>
+            <span class="material-symbols-outlined text-2xl font-bold">settings_input_hdmi</span>
+        </h2>
+
+        <!-- Device Options -->
+        <div class="flex items-center justify-center gap-16 w-full max-w-5xl">
+            <!-- 1. Google Drive -->
+            <div class="flex flex-col items-center gap-6">
+                <button onclick="handleSelection('gdrive')" class="w-72 h-72 rounded-full bg-white hover:bg-slate-50 border border-slate-100 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden p-8 group">
+                    <img src="templates/Upload%20process/Gogledriveimage.png" class="w-full h-full object-contain group-hover:scale-105 transition-transform" alt="Google Drive"/>
+                </button>
+                <span class="text-2xl font-extrabold text-slate-500 tracking-tight" id="gdrive-label">Google Drive</span>
+            </div>
+
+            <!-- 2. USB -->
+            <div class="flex flex-col items-center gap-6">
+                <button onclick="handleSelection('usb')" class="w-72 h-72 rounded-full bg-white hover:bg-slate-50 border border-slate-100 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden p-8 group">
+                    <img src="templates/Upload%20process/USB.png" class="w-full h-full object-contain group-hover:scale-105 transition-transform" alt="USB"/>
+                </button>
+                <span class="text-2xl font-extrabold text-slate-500 tracking-tight" id="usb-label">USB</span>
+            </div>
+
+            <!-- 3. TYPE-C -->
+            <div class="flex flex-col items-center gap-6">
+                <button onclick="handleSelection('type-c')" class="w-72 h-72 rounded-full bg-white hover:bg-slate-50 border border-slate-100 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden p-8 group">
+                    <img src="templates/Upload%20process/TYPEC.png" class="w-full h-full object-contain group-hover:scale-105 transition-transform" alt="TYPE-C"/>
+                </button>
+                <span class="text-2xl font-extrabold text-slate-500 tracking-tight" id="typec-label">TYPE - C</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Session Timeout Overlay -->
+    <div id="timeout-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center hidden">
+        <img src="https://i.supaimg.com/d0495ff2-7a2f-426d-a287-7b3b2861a5ee/eab2b984-5640-4a77-a221-f6a3f18b0d50.jpg" alt="Session Expired" class="w-full h-full object-cover">
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        const voiceBtn = document.getElementById('voiceBtn');
+        const timeoutOverlay = document.getElementById('timeout-overlay');
+        const elem = document.documentElement;
+        
+        let isSpeaking = false;
+
+        const sessionId = localStorage.getItem('session_id') || 'offline_session';
+        const lang = localStorage.getItem('selectedLanguage') || 'English';
+
+        let langCode = 'en';
+        if (lang === 'Hindi') langCode = 'hi';
+        if (lang === 'Marathi') langCode = 'mr';
+
+        // Translation Dictionary matching Mockups
+        const translations = {
+            'English': {
+                title: "Choose the Device",
+                gdrive: "Google Drive",
+                usb: "USB",
+                typec: "TYPE - C",
+                audio: "Select your device to upload the documents. You can choose Google Drive, USB, or Type C cable.",
+                select: "You have selected {type} mode.",
+                sessionExpired: "Session expired. Returning to welcome screen."
+            },
+            'Hindi': {
+                title: "डिवाइस चुनें",
+                gdrive: "गूगल ड्राइव",
+                usb: "यूएसबी",
+                typec: "टाइप - सी",
+                audio: "दस्तावेज़ अपलोड करने के लिए अपना डिवाइस चुनें। आप गूगल ड्राइव, यूएसबी, या टाइप सी केबल चुन सकते हैं।",
+                select: "आपने {type} मोड चुना है।",
+                sessionExpired: "सत्र समाप्त हो गया है। स्वागत स्क्रीन पर वापस जा रहे हैं।"
+            },
+            'Marathi': {
+                title: "डिव्हाइस निवडा",
+                gdrive: "गुगल ड्राईव्ह",
+                usb: "युएसबी",
+                typec: "टाईप - सी",
+                audio: "दस्तऐवज अपलोड करण्यासाठी आपले डिव्हाइस निवडा. आपण गुगल ड्राईव्ह, यूएसबी, किंवा टाईप सी केबल निवडू शकता.",
+                select: "आपण {type} मोड निवडला आहे.",
+                sessionExpired: "सत्र संपले आहे. स्वागत स्क्रीनवर परत जात आहे."
+            }
+        };
+
+        const t = translations[lang] || translations['English'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Apply translations
+            document.getElementById('title-text').innerText = t.title;
+            document.getElementById('gdrive-label').innerText = t.gdrive;
+            document.getElementById('usb-label').innerText = t.usb;
+            document.getElementById('typec-label').innerText = t.typec;
+
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Speak initial guidance
+            setTimeout(() => {
+                speak(t.audio, langCode);
+            }, 600);
+        });
+
+        // Clock Update
+        function updateClock() {
+            const now = new Date();
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = String(now.getFullYear()).substring(2);
+            document.getElementById('date-box').innerText = `${day} ${month} ${year}`;
+            
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const strHours = String(hours).padStart(2, '0');
+            document.getElementById('time-box').innerText = `${strHours} : ${minutes} : ${seconds} ${ampm}`;
+        }
+
+        // TTS voice engine utilizing the backend gTTS endpoint
+        function speak(text, langCode = 'en') {
+            if (!text) return;
+            const existingAudio = document.getElementById('neural-speech-audio');
+            if (existingAudio) {
+                try {
+                    existingAudio.pause();
+                } catch(e){}
+                existingAudio.remove();
+            }
+            
+            voiceBtn.classList.add('speaking-btn', 'text-yellow-600');
+            const audio = document.createElement('audio');
+            audio.id = 'neural-speech-audio';
+            audio.src = `/api/speak?text=${encodeURIComponent(text)}&lang=${langCode}`;
+            document.body.appendChild(audio);
+            audio.play().catch(err => console.log("Audio playback deferred:", err));
+            audio.onended = () => {
+                voiceBtn.classList.remove('speaking-btn', 'text-yellow-600');
+            };
+            audio.onerror = () => {
+                voiceBtn.classList.remove('speaking-btn', 'text-yellow-600');
+            };
+        }
+
+        voiceBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            speak(t.audio, langCode);
+        });
+
+
+
+        function handleSelection(type) {
+            localStorage.setItem('selectedSource', type);
+            
+            // Translate type name for voice confirmation
+            let localizedType = type;
+            if (type === 'gdrive') localizedType = t.gdrive;
+            if (type === 'usb') localizedType = t.usb;
+            if (type === 'type-c') localizedType = t.typec;
+            
+            const msg = t.select.replace('{type}', localizedType);
+            speak(msg, langCode);
+            
+            // Navigate after delay
+            setTimeout(() => {
+                window.location.href = `folderprocess.html?source=${type}`;
+            }, 1200);
+        }
+
+        function abortSession() {
+            fetch('/api/session/abort', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            }).finally(() => {
+                localStorage.removeItem('session_id');
+                window.location.href = 'welcome.html';
+            });
+        }
+
+        // Session Timer (5 minutes)
+        const SESSION_TIMEOUT = 5 * 60 * 1000;
+        const sessionTimer = setTimeout(() => {
+            timeoutOverlay.classList.remove('hidden');
+            timeoutOverlay.classList.add('flex');
+            speak(t.sessionExpired, langCode);
+            abortSession();
+            setTimeout(() => {
+                window.location.href = 'welcome.html';
+            }, 5000);
+        }, SESSION_TIMEOUT);
+
+        function openFullscreen() {
+            if (document.fullscreenElement) return;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            }
+        }
+        document.addEventListener('click', openFullscreen);
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
