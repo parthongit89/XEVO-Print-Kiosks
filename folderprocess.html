@@ -562,14 +562,40 @@
             usbPollingInterval = setInterval(scanUSB, 5000);
         }
 
-        function scanUSB() {
+                function scanUSB() {
             fetch('/api/usb/detect')
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.detected && data.files.length > 0) {
-                        // Automatically import USB files for simplicity, or simulate import
-                        // For the exact template wise design, we display a mock or imported file list.
-         // Render files list on right side
+                        const unimported = data.files.filter(uf => !uploadedFiles.some(f => f.original_name === uf.name));
+                        if (unimported.length > 0) {
+                            importUSBFile(unimported[0].path);
+                        }
+                    }
+                })
+                .catch(err => console.error("USB scan error:", err));
+        }
+
+        function importUSBFile(filePath) {
+            fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    source_path: filePath
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    uploadedFiles = [...uploadedFiles, ...data.files];
+                    renderFilesList();
+                }
+            })
+            .catch(err => console.error("USB Import error:", err));
+        }
+
+        // Render files list on right side
         function renderFilesList() {
             const container = document.getElementById('files-list-container');
             container.innerHTML = `
