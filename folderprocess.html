@@ -452,6 +452,14 @@
             // Load printers
             loadPrinters();
 
+            // Load any existing session files
+            fetchSessionFiles();
+
+            // Setup Google Drive sync polling if source is gdrive
+            if (source === 'gdrive') {
+                startGDriveSyncPolling();
+            }
+
             // Set Initial Voice instructions
             setTimeout(() => {
                 speak(t.voice_directions, langCode);
@@ -669,8 +677,61 @@
         }
 
         function removeUploadedFile(fileId) {
-            uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
-            renderFilesList();
+            // Delete file physically from backend session
+            fetch('/api/session/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    file_id: fileId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+                    renderFilesList();
+                }
+            })
+            .catch(err => console.error("Error deleting file:", err));
+        }
+
+        function fetchSessionFiles() {
+            fetch(`/api/session/files/${sessionId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.files) {
+                        uploadedFiles = data.files;
+                        renderFilesList();
+                    }
+                })
+                .catch(err => console.error("Error fetching session files:", err));
+        }
+
+        let gdrivePollingInterval = null;
+        function startGDriveSyncPolling() {
+            syncGDriveFiles();
+            gdrivePollingInterval = setInterval(syncGDriveFiles, 5000);
+        }
+
+        function syncGDriveFiles() {
+            const folderUrl = "https://drive.google.com/drive/folders/1kSqN8BkHZUUVcH3XRMRZCzpM5pWLNx_J?usp=drive_link";
+            fetch('/api/session/gdrive_sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    folder_url: folderUrl
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.files) {
+                    uploadedFiles = data.files;
+                    renderFilesList();
+                }
+            })
+            .catch(err => console.error("Google Drive sync error:", err));
         }
 
         // ----------------- FLOW STEP TRANSITIONS -----------------
@@ -994,6 +1055,7 @@
 
         function abortSessionOnBackend() {
             if (usbPollingInterval) clearInterval(usbPollingInterval);
+            if (gdrivePollingInterval) clearInterval(gdrivePollingInterval);
             synth.cancel();
 
             fetch('/api/session/abort', {
