@@ -803,12 +803,22 @@
             })
             .then(res => res.json())
             .then(data => {
-                if (data.success && data.new_files && data.new_files.length > 0) {
-                    const freshFiles = data.new_files.filter(nf => !uploadedFiles.some(f => f.id === nf.id));
-                    if (freshFiles.length > 0) {
-                        uploadedFiles = [...uploadedFiles, ...freshFiles];
+                if (data.success && data.files) {
+                    const freshFiles = data.files.filter(nf => !uploadedFiles.some(f => f.id === nf.id || f.original_name === nf.original_name));
+                    if (freshFiles.length > 0 || uploadedFiles.length !== data.files.length) {
+                        uploadedFiles = data.files;
                         uploadedFiles.forEach(initializeFileSettings);
                         renderFilesList();
+                        
+                        // If we are currently in step 2 editing screen, re-draw tabs
+                        if (!document.getElementById('step-settings').classList.contains('hidden')) {
+                            if (!activeFileId || !uploadedFiles.some(f => f.id === activeFileId)) {
+                                activeFileId = uploadedFiles[0].id;
+                            }
+                            renderFilePills();
+                            loadActiveFileSettings();
+                        }
+                        calculatePrice();
                     }
                 }
             })
