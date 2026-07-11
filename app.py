@@ -43,7 +43,23 @@ except Exception as e:
 # ----------------- STATIC ROUTING -----------------
 @app.route('/')
 def index():
-    return send_from_directory('.', 'welcome.html')
+    return send_from_directory('templates/home', 'welcome.html')
+
+@app.route('/welcome.html')
+def welcome():
+    return send_from_directory('templates/home', 'welcome.html')
+
+@app.route('/language.html')
+def language():
+    return send_from_directory('templates/Language', 'language.html')
+
+@app.route('/uploadprocess.html')
+def uploadprocess():
+    return send_from_directory('templates/Upload process', 'uploadprocess.html')
+
+@app.route('/folderprocess.html')
+def folderprocess():
+    return send_from_directory('templates/Process', 'folderprocess.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
