@@ -120,7 +120,7 @@
         const voiceBtn = document.getElementById('voiceBtn');
         const timeoutOverlay = document.getElementById('timeout-overlay');
         const elem = document.documentElement;
-        let synth = window.speechSynthesis;
+        
         let isSpeaking = false;
         
         const sessionId = localStorage.getItem('session_id') || 'offline_session';
@@ -223,45 +223,29 @@
             });
         }
 
-        // TTS voice engine
+        // TTS voice engine utilizing the backend gTTS endpoint
         function speak(text, langCode = 'en') {
-            synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            const voices = synth.getVoices();
-            let preferredVoice = voices.find(v => v.lang.startsWith(langCode));
-            
-            if (!preferredVoice) {
-                preferredVoice = voices.find(v => 
-                    v.name.toLowerCase().includes('female') || 
-                    v.name.toLowerCase().includes('google us english') || 
-                    v.name.toLowerCase().includes('microsoft zira') ||
-                    v.name.toLowerCase().includes('samantha')
-                );
+            if (!text) return;
+            const existingAudio = document.getElementById('neural-speech-audio');
+            if (existingAudio) {
+                try {
+                    existingAudio.pause();
+                } catch(e){}
+                existingAudio.remove();
             }
             
-            if (preferredVoice) {
-                utterance.voice = preferredVoice;
-                utterance.lang = preferredVoice.lang;
-            } else {
-                utterance.lang = langCode;
-            }
-            
-            utterance.pitch = 1.0;
-            utterance.rate = 0.95;
-
-            utterance.onstart = () => {
-                isSpeaking = true;
-                voiceBtn.classList.add('speaking-btn', 'text-yellow-600');
-            };
-            utterance.onend = () => {
-                isSpeaking = false;
+            voiceBtn.classList.add('speaking-btn', 'text-yellow-600');
+            const audio = document.createElement('audio');
+            audio.id = 'neural-speech-audio';
+            audio.src = `/api/speak?text=${encodeURIComponent(text)}&lang=${langCode}`;
+            document.body.appendChild(audio);
+            audio.play().catch(err => console.log("Audio playback deferred:", err));
+            audio.onended = () => {
                 voiceBtn.classList.remove('speaking-btn', 'text-yellow-600');
             };
-            utterance.onerror = () => {
-                isSpeaking = false;
+            audio.onerror = () => {
                 voiceBtn.classList.remove('speaking-btn', 'text-yellow-600');
             };
-            synth.speak(utterance);
         }
 
         voiceBtn.addEventListener('click', (e) => {
@@ -269,9 +253,7 @@
             speak(voicePrompts['English'].instruct, 'en');
         });
 
-        if (synth.onvoiceschanged !== undefined) {
-            synth.onvoiceschanged = () => synth.getVoices();
-        }
+
 
         function selectLanguage(langName, langCodeStr) {
             // Store selected language
