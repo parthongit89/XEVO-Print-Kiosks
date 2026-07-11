@@ -7,7 +7,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c:wght@400;700;900&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -20,7 +20,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none; /* Prevent text selection to feel like an app */
+            user-select: none; /* Prevent text selection */
             -webkit-user-drag: none;
         }
 
@@ -41,69 +41,95 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-image: url('https://i.supaimg.com/d0495ff2-7a2f-426d-a287-7b3b2861a5ee/e6ab6924-7751-4535-91f2-32e87e5404e0.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-color: #ffffff;
             text-align: center;
+            padding: 40px;
         }
 
-        .content {
-            z-index: 10;
-            padding: 20px;
-            margin-top: -50px;
+        .top-label {
+            font-family: var(--font-main);
+            font-size: 1.25rem;
+            color: #b0b0b0;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
         h1 {
-            font-family: var(--font-title);
-            font-size: 4rem;
-            color: #000000;
-            margin-bottom: 1rem;
-            letter-spacing: -1px;
+            font-family: var(--font-main);
+            font-size: 5rem;
+            color: #1a1a1a;
+            margin-bottom: 3.5rem;
+            letter-spacing: -1.5px;
             font-weight: 900;
-        }
-
-        p {
-            font-family: var(--font-rounded);
-            font-size: 1.5rem;
-            color: #000000;
-            margin-bottom: 2rem;
-            font-weight: 700;
         }
 
         .start-btn {
             display: inline-block;
-            padding: 15px 80px;
-            font-size: 2rem;
-            font-weight: 800;
-            color: #000000;
+            padding: 18px 90px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
             text-decoration: none;
-            background: linear-gradient(90deg, #9333ea 0%, #facc15 100%);
-            border-radius: 50px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: #ffffff;
+            border-radius: 20px;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
             cursor: pointer;
-            border: none;
-            font-family: var(--font-rounded);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1.5px solid #eaeaea;
+            font-family: var(--font-main);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 2px 5px rgba(0, 0, 0, 0.02);
             outline: none;
+            margin-bottom: 4rem;
         }
 
         .start-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
+            background-color: #fafafa;
         }
 
         .start-btn:hover {
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.03);
+            background-color: #fafafa;
         }
 
-        /* Decorative Arrow */
-        .arrow-container {
+        /* Color Dots Indicator */
+        .dots-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .dot-pink { background-color: #ff007f; }
+        .dot-purple { background-color: #7f00ff; }
+        .dot-blue { background-color: #007fff; }
+
+        /* Footer Section */
+        .footer {
             position: absolute;
-            bottom: 20%;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 150px;
-            pointer-events: none;
+            width: calc(100% - 80px);
+            max-width: 1800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666666;
+            font-family: var(--font-main);
+            font-weight: 500;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         /* Fullscreen styles to ensure no gaps */
@@ -114,33 +140,38 @@
 
         /* Responsive adjustments */
         @media (max-width: 1024px) {
-            h1 { font-size: 3rem; }
-            p { font-size: 1.2rem; }
-            .start-btn { font-size: 1.6rem; padding: 12px 60px; }
+            h1 { font-size: 4rem; }
+            .start-btn { font-size: 1.3rem; padding: 15px 75px; }
         }
 
         @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            p { font-size: 1rem; }
-            .start-btn { font-size: 1.4rem; padding: 10px 50px; }
+            h1 { font-size: 3rem; }
+            .start-btn { font-size: 1.1rem; padding: 12px 60px; }
         }
     </style>
 </head>
 <body>
 
     <div class="container" id="mainContainer">
-        <div class="content">
-            <h1>Welcome to E-PRINT</h1>
-            <p>Click to Start button for printing !!</p>
-            
-            <button class="start-btn" id="startBtn" href="language.html">Start</button>
+        <div class="top-label">Self service Kisok system</div>
+        
+        <h1>Welcome to E - Print</h1>
+        
+        <button class="start-btn" id="startBtn">Start</button>
+        
+        <div class="dots-container">
+            <div class="dot dot-pink"></div>
+            <div class="dot dot-purple"></div>
+            <div class="dot dot-blue"></div>
         </div>
 
-        <div class="arrow-container">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="M45,80 C40,60 50,40 70,30" fill="none" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round" />
-                <path d="M60,35 L72,28 L68,42" fill="none" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round" />
-            </svg>
+        <div class="footer">
+            <div class="footer-left">
+                <span>Made In India</span>
+                <span>🇮🇳</span>
+            </div>
+            <div>2026 All Rights Reseverd</div>
+            <div>v.1.01Kisok.india</div>
         </div>
     </div>
 
@@ -150,7 +181,7 @@
 
         // Function to enter fullscreen
         function openFullscreen() {
-            if (document.fullscreenElement) return; // Already in fullscreen
+            if (document.fullscreenElement) return;
 
             if (elem.requestFullscreen) {
                 elem.requestFullscreen().catch(err => console.log(err));
@@ -161,12 +192,10 @@
             }
         }
 
-        // 1. Initial fullscreen attempt on ANY first click/touch on the page
         document.addEventListener('click', function() {
             openFullscreen();
         }, { once: false });
 
-        // 2. Specific logic for the Start Button
         startBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             openFullscreen();
@@ -188,7 +217,6 @@
             .then(data => {
                 if (data.success) {
                     localStorage.setItem('session_id', data.session_id);
-                    // Navigate to language selection
                     setTimeout(() => {
                         window.location.href = 'language.html';
                     }, 150);
@@ -200,7 +228,6 @@
             })
             .catch(err => {
                 console.error('Error starting session:', err);
-                // Fallback to local offline mode if backend is not running yet
                 localStorage.setItem('session_id', 'offline_session');
                 setTimeout(() => {
                     window.location.href = 'language.html';
@@ -208,10 +235,8 @@
             });
         });
 
-        // Prevention of context menu to feel more like a native app
         document.addEventListener('contextmenu', event => event.preventDefault());
 
-        // Handle case where user might use keyboard to start
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' || e.key === ' ') {
                 openFullscreen();
