@@ -275,8 +275,16 @@
             </h1>
 
             <!-- Large Token Display -->
-            <div class="text-7xl md:text-8xl font-black text-slate-400 tracking-wider mb-20 select-text" id="token-display">
+            <div class="text-7xl md:text-8xl font-black text-slate-400 tracking-wider mb-8 select-text" id="token-display">
                 0000
+            </div>
+
+            <!-- Download locked PDF button -->
+            <div class="mb-12 flex justify-center">
+                <a id="download-locked-pdf-btn" href="#" class="px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-md text-sm font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer decoration-0">
+                    <span class="material-symbols-outlined text-lg">download</span>
+                    <span>Download Locked PDF</span>
+                </a>
             </div>
 
             <!-- Bottom circles -->
@@ -388,6 +396,16 @@
         
         let usbPollingInterval = null;
         let isBillingDetailsOpen = false;
+        let activeFileId = null;
+        let detectedDeviceFiles = [];
+
+        function initializeFileSettings(file) {
+            if (file.copies === undefined) file.copies = 1;
+            if (file.pagesPerSheet === undefined) file.pagesPerSheet = 1;
+            if (file.paperSize === undefined) file.paperSize = 'A4';
+            if (file.orientation === undefined) file.orientation = 'portrait';
+            if (file.colorMode === undefined) file.colorMode = 'color';
+        }
 
         // Translations matching Mockups
         const translations = {
@@ -567,33 +585,99 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.detected && data.files.length > 0) {
-                        const unimported = data.files.filter(uf => !uploadedFiles.some(f => f.original_name === uf.name));
-                        if (unimported.length > 0) {
-                            importUSBFile(unimported[0].path);
+                        const fileNamesMatch = data.files.length === detectedDeviceFiles.length && 
+                            data.files.every((f, i) => f.path === detectedDeviceFiles[i].path);
+                        if (!fileNamesMatch) {
+                            detectedDeviceFiles = data.files;
+                            renderDeviceFilesUI();
+                        }
+                    } else {
+                        if (detectedDeviceFiles.length > 0) {
+                            detectedDeviceFiles = [];
+                            renderDeviceFilesUI();
                         }
                     }
                 })
                 .catch(err => console.error("USB scan error:", err));
         }
 
-        function importUSBFile(filePath) {
-            fetch('/api/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    session_id: sessionId,
-                    source_path: filePath
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    uploadedFiles = [...uploadedFiles, ...data.files];
-                    renderFilesList();
-                }
-            })
-            .catch(err => console.error("USB Import error:", err));
+        function renderDeviceFilesUI() {
+            const wrapper = document.getElementById('device-graphic-wrapper');
+            const instr = document.getElementById('device-instruction');
+            
+            if (detectedDeviceFiles.length === 0) {
+                wrapper.innerHTML = `<img id="device-graphic" src="${source === 'usb' ? 'templates/Upload%20process/USB.png' : 'templates/Upload%20process/TYPEC.png'}" class="max-w-full max-h-full object-contain" alt="Device"/>`;
+                wrapper.style.cursor = 'pointer';
+                wrapper.onclick = triggerFileSelect;
+                instr.innerText = source === 'usb' ? t.usb_instruction : t.typec_instruction;
+                return;
+            }
+            
+            wrapper.onclick = null;
+            wrapper.style.cursor = 'default';
+            instr.innerText = "Select documents you wish to import for print:";
+            
+            let listHtml = `
+                <div class="w-full h-full flex flex-col justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-inner">
+                    <div class="flex-grow overflow-y-auto flex flex-col gap-2 pr-1 mb-3 text-left">
+            `;
+            
+            detectedDeviceFiles.forEach((file, index) => {
+                listHtml += `
+                    <label class="flex items-center gap-3 p-2.5 bg-white border border-slate-100 rounded-lg shadow-sm cursor-pointer hover:bg-slate-50 transition-all select-none">
+                        <input type="checkbox" id="device-file-${index}" checked value="${file.path}" class="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500 cursor-pointer"/>
+                        <span class="text-xs font-bold text-slate-700 truncate flex-grow" title="${file.name}">${file.name}</span>
+                    </label>
+                `;
+            });
+            
+            listHtml += `
+                    </div>
+                    <button onclick="importSelectedDeviceFiles()" class="w-full py-2.5 bg-[#7f00ff] hover:bg-[#6b00d6] text-white text-xs font-extrabold rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+                        Import Selected
+                    </button>
+                </div>
+            `;
+            wrapper.innerHTML = listHtml;
         }
+
+        function importSelectedDeviceFiles() {
+            const inputs = document.querySelectorAll('#device-graphic-wrapper input[type="checkbox"]:checked');
+            if (inputs.length === 0) {
+                alert("Please select at least one document to import.");
+                return;
+            }
+            
+            let chain = Promise.resolve();
+            inputs.forEach(input => {
+                chain = chain.then(() => {
+                    return fetch('/api/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            source_path: input.value
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            uploadedFiles = [...uploadedFiles, ...data.files];
+                            uploadedFiles.forEach(initializeFileSettings);
+                            renderFilesList();
+                        }
+                    });
+                });
+            });
+            
+            chain.then(() => {
+                detectedDeviceFiles = [];
+                renderDeviceFilesUI();
+            })
+            .catch(err => console.error("Error importing device files:", err));
+        }
+
+        
 
         // Render files list on right side
         function renderFilesList() {
@@ -659,7 +743,6 @@
         }
 
         function removeUploadedFile(fileId) {
-            // Delete file physically from backend session
             fetch('/api/session/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -672,7 +755,16 @@
             .then(data => {
                 if (data.success) {
                     uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+                    if (activeFileId === fileId) {
+                        activeFileId = uploadedFiles.length > 0 ? uploadedFiles[0].id : null;
+                    }
                     renderFilesList();
+                    if (!document.getElementById('step-settings').classList.contains('hidden')) {
+                        renderFilePills();
+                        loadActiveFileSettings();
+                    }
+                    calculatePrice();
+                    checkSettingsPillsEmpty();
                 }
             })
             .catch(err => console.error("Error deleting file:", err));
@@ -684,6 +776,7 @@
                 .then(data => {
                     if (data.success && data.files) {
                         uploadedFiles = data.files;
+                        uploadedFiles.forEach(initializeFileSettings);
                         renderFilesList();
                     }
                 })
@@ -693,10 +786,12 @@
         let gdrivePollingInterval = null;
         function startGDriveSyncPolling() {
             syncGDriveFiles();
-            gdrivePollingInterval = setInterval(syncGDriveFiles, 5000);
+            gdrivePollingInterval = setInterval(syncGDriveFiles, 100);
         }
 
         function syncGDriveFiles() {
+            if (isSyncing) return;
+            isSyncing = true;
             const folderUrl = "https://drive.google.com/drive/folders/1kSqN8BkHZUUVcH3XRMRZCzpM5pWLNx_J?usp=drive_link";
             fetch('/api/session/gdrive_sync', {
                 method: 'POST',
@@ -708,22 +803,32 @@
             })
             .then(res => res.json())
             .then(data => {
-                if (data.success && data.files) {
-                    uploadedFiles = data.files;
-                    renderFilesList();
+                if (data.success && data.new_files && data.new_files.length > 0) {
+                    const freshFiles = data.new_files.filter(nf => !uploadedFiles.some(f => f.id === nf.id));
+                    if (freshFiles.length > 0) {
+                        uploadedFiles = [...uploadedFiles, ...freshFiles];
+                        uploadedFiles.forEach(initializeFileSettings);
+                        renderFilesList();
+                    }
                 }
             })
-            .catch(err => console.error("Google Drive sync error:", err));
+            .catch(err => console.error("Google Drive sync error:", err))
+            .finally(() => {
+                isSyncing = false;
+            });
         }
 
         // ----------------- FLOW STEP TRANSITIONS -----------------
         function goToSettingsStep() {
             if (uploadedFiles.length === 0) return;
             
-            // Render selected file pills at the top of settings page
-            renderFilePills();
+            if (!activeFileId || !uploadedFiles.some(f => f.id === activeFileId)) {
+                activeFileId = uploadedFiles[0].id;
+            }
             
-            // Toggle Views
+            renderFilePills();
+            loadActiveFileSettings();
+            
             document.getElementById('step-upload').classList.add('hidden');
             document.getElementById('step-settings').classList.remove('hidden');
             document.getElementById('step-settings').classList.add('flex');
@@ -743,11 +848,25 @@
             container.innerHTML = '';
             
             uploadedFiles.forEach(file => {
+                initializeFileSettings(file);
+                const isTabActive = (file.id === activeFileId);
                 const pill = document.createElement('div');
-                pill.className = "flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 shadow-sm";
+                
+                if (isTabActive) {
+                    pill.className = "flex items-center gap-2 bg-[#7f00ff]/10 border-2 border-[#7f00ff] px-5 py-2.5 rounded-xl text-xs font-black text-[#7f00ff] shadow-sm cursor-pointer scale-105 transition-all";
+                } else {
+                    pill.className = "flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:border-slate-300 shadow-sm cursor-pointer transition-all";
+                }
+                
+                pill.onclick = () => {
+                    activeFileId = file.id;
+                    renderFilePills();
+                    loadActiveFileSettings();
+                };
+                
                 pill.innerHTML = `
-                    <span class="truncate max-w-[140px]">${file.original_name}</span>
-                    <button onclick="removeUploadedFile('${file.id}'); renderFilePills(); calculatePrice(); checkSettingsPillsEmpty();" class="text-slate-400 hover:text-red-500 flex items-center">
+                    <span class="truncate max-w-[160px]">${file.original_name}</span>
+                    <button onclick="event.stopPropagation(); removeUploadedFile('${file.id}');" class="text-slate-400 hover:text-red-500 flex items-center ml-2 cursor-pointer">
                         <span class="material-symbols-outlined text-sm font-bold">close</span>
                     </button>
                 `;
@@ -763,113 +882,151 @@
 
         // ----------------- PRINT SETTINGS MODIFICATIONS -----------------
         function adjustCopies(val) {
-            copiesCount += val;
-            if (copiesCount < 1) copiesCount = 1;
-            document.getElementById('copies-input').value = copiesCount;
-            calculatePrice();
+            const file = uploadedFiles.find(f => f.id === activeFileId);
+            if (file) {
+                initializeFileSettings(file);
+                file.copies += val;
+                if (file.copies < 1) file.copies = 1;
+                document.getElementById('copies-input').value = file.copies;
+                calculatePrice();
+            }
         }
 
-        function adjustPagesPerSheet(val) {
-            ppsCount += val;
-            if (ppsCount < 1) ppsCount = 1;
-            if (ppsCount > 4) ppsCount = 4;
-            document.getElementById('pps-input').value = ppsCount;
-            calculatePrice();
-        }
-
-        // Paper Size select
-        function setPaperSize(size) {
-            activePaperSize = size;
+        function loadActiveFileSettings() {
+            const file = uploadedFiles.find(f => f.id === activeFileId);
+            if (!file) return;
+            initializeFileSettings(file);
             
-            // Reset borders of all size buttons
+            document.getElementById('copies-input').value = file.copies;
+            document.getElementById('pps-input').value = file.pagesPerSheet;
+            
+            updatePaperSizeUI(file.paperSize);
+            updateOrientationUI(file.orientation);
+            updateColorModeUI(file.colorMode);
+        }
+
+        function updatePaperSizeUI(size) {
             const sizes = ['A4', 'A5', 'Letter', 'Legal', 'Statement', 'C', 'D', 'E'];
             sizes.forEach(s => {
                 const btn = document.getElementById(`size-btn-${s}`);
                 if (btn) {
-                    btn.className = "px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all";
+                    btn.className = "px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer";
                 }
             });
-
-            // Highlight selected size (A3 size map to C/D/E)
-            let matchCode = size;
-            if (size.startsWith('C ')) matchCode = 'C';
-            if (size.startsWith('D ')) matchCode = 'D';
-            if (size.startsWith('E ')) matchCode = 'E';
-            
-            const activeBtn = document.getElementById(`size-btn-${matchCode}`);
+            const activeBtn = document.getElementById(`size-btn-${size}`);
             if (activeBtn) {
-                activeBtn.className = "px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all";
+                activeBtn.className = "px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all cursor-pointer";
             }
+        }
 
-            calculatePrice();
+        function updateOrientationUI(orient) {
+            const btnPort = document.getElementById('btn-orient-port');
+            const btnLand = document.getElementById('btn-orient-land');
+            if (orient === 'portrait') {
+                btnPort.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all py-3.5";
+                btnLand.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold active:scale-95 transition-all hover:text-slate-700 py-3.5";
+            } else {
+                btnPort.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold active:scale-95 transition-all hover:text-slate-700 py-3.5";
+                btnLand.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all py-3.5";
+            }
+        }
+
+        function updateColorModeUI(mode) {
+            const btnColor = document.getElementById('btn-color');
+            const btnBw = document.getElementById('btn-bw');
+            if (mode === 'color') {
+                btnColor.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all py-3.5";
+                btnColor.innerHTML = `<span class="text-[#007fff]">C</span><span class="text-[#ff007f]">o</span><span class="text-[#7f00ff]">l</span><span class="text-[#007fff]">o</span><span class="text-[#7f00ff]">r</span>`;
+                btnBw.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold active:scale-95 transition-all hover:text-slate-700 py-3.5";
+            } else {
+                btnColor.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold active:scale-95 transition-all hover:text-slate-700 py-3.5";
+                btnColor.innerText = "Color";
+                btnBw.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all py-3.5";
+            }
+        }
+
+        function adjustPagesPerSheet(val) {
+            const file = uploadedFiles.find(f => f.id === activeFileId);
+            if (file) {
+                initializeFileSettings(file);
+                file.pagesPerSheet += val;
+                if (file.pagesPerSheet < 1) file.pagesPerSheet = 1;
+                if (file.pagesPerSheet > 4) file.pagesPerSheet = 4;
+                document.getElementById('pps-input').value = file.pagesPerSheet;
+                calculatePrice();
+            }
+        }
+
+        // Paper Size select
+        function setPaperSize(size) {
+            const file = uploadedFiles.find(f => f.id === activeFileId);
+            if (file) {
+                initializeFileSettings(file);
+                file.paperSize = size;
+                updatePaperSizeUI(size);
+                calculatePrice();
+            }
         }
 
         // Orientation selection
         function setOrientation(orient) {
-            activeOrientation = orient;
-            const btnPort = document.getElementById('btn-orient-port');
-            const btnLand = document.getElementById('btn-orient-land');
-            
-            if (orient === 'portrait') {
-                btnPort.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all";
-                btnLand.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
-            } else {
-                btnLand.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all";
-                btnPort.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+            const file = uploadedFiles.find(f => f.id === activeFileId);
+            if (file) {
+                initializeFileSettings(file);
+                file.orientation = orient;
+                updateOrientationUI(orient);
             }
         }
 
         // Color Mode selection
         function setColorMode(mode) {
-            activeColorMode = mode;
-            const btnColor = document.getElementById('btn-color');
-            const btnBw = document.getElementById('btn-bw');
-            
-            if (mode === 'color') {
-                btnColor.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all";
-                btnColor.innerHTML = `<span class="text-[#007fff]">C</span><span class="text-[#ff007f]">o</span><span class="text-[#7f00ff]">l</span><span class="text-[#facc15]">o</span><span class="text-[#10b981]">r</span>`;
-                
-                btnBw.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
-            } else {
-                btnBw.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all";
-                
-                btnColor.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
-                btnColor.innerHTML = `Color`;
+            const file = uploadedFiles.find(f => f.id === activeFileId);
+            if (file) {
+                initializeFileSettings(file);
+                file.colorMode = mode;
+                updateColorModeUI(mode);
+                calculatePrice();
             }
-            
-            calculatePrice();
         }
 
         // ----------------- PRICING ENGINE -----------------
         function calculatePrice() {
-            let totalPages = 0;
-            uploadedFiles.forEach(f => {
-                totalPages += f.pages;
+            let total = 0;
+            let fileDetailsHtml = '';
+
+            uploadedFiles.forEach(file => {
+                initializeFileSettings(file);
+                const copies = file.copies;
+                const pps = file.pagesPerSheet;
+                const mode = file.colorMode;
+                const size = file.paperSize;
+                
+                const pages = Math.ceil(file.pages / pps);
+                const rate = (mode === 'bw') ? RATE_BW : RATE_COLOR;
+                
+                let sizeSurcharge = 0.00;
+                if (size === 'C size sheet' || size === 'D size sheet' || size === 'E size sheet' || size === 'C' || size === 'D' || size === 'E') {
+                    sizeSurcharge = 0.50;
+                }
+                
+                const fileCost = pages * copies * (rate + sizeSurcharge);
+                total += fileCost;
+                
+                const modeStr = (mode === 'bw') ? 'B/W' : 'Color';
+                fileDetailsHtml += `
+                    <div class="flex justify-between text-xs text-slate-500 font-bold mb-1">
+                        <span class="truncate max-w-[200px]">${file.original_name} (${copies}x, ${modeStr}, ${size})</span>
+                        <span>$${fileCost.toFixed(2)}</span>
+                    </div>
+                `;
             });
 
-            // Pages adjustment for Pages per Sheet
-            const adjustedPages = Math.ceil(totalPages / ppsCount);
+            const serviceFee = uploadedFiles.length > 0 ? SERVICE_FEE : 0.00;
+            const grandTotal = total + serviceFee;
 
-            const copies = copiesCount;
-            const rate = (activeColorMode === 'bw') ? RATE_BW : RATE_COLOR;
-            
-            // Surcharge for C, D, E sizes
-            let sizeSurcharge = 0.00;
-            if (activePaperSize === 'C size sheet' || activePaperSize === 'D size sheet' || activePaperSize === 'E size sheet') {
-                sizeSurcharge = 0.50; // +0.50 $ per page
-            }
-
-            const printCharge = adjustedPages * copies * rate;
-            const sizeCharge = adjustedPages * copies * sizeSurcharge;
-            const totalCost = printCharge + sizeCharge + SERVICE_FEE;
-
-            // Update details
-            document.getElementById('bill-print-charge').innerText = `${printCharge.toFixed(2)} $`;
-            document.getElementById('bill-size-surcharge').innerText = `${sizeCharge.toFixed(2)} $`;
-            document.getElementById('bill-total').innerText = `${totalCost.toFixed(2)} $`;
-            
-            // Update main display
-            document.getElementById('price-display').innerText = `${totalCost.toFixed(2)} $`;
+            document.getElementById('price-bw-qty').innerHTML = fileDetailsHtml || '<div class="text-xs text-slate-400">No documents configured</div>';
+            document.getElementById('price-service').innerText = `$${serviceFee.toFixed(2)}`;
+            document.getElementById('total-bill').innerText = `$${grandTotal.toFixed(2)}`;
         }
 
         function toggleBillingDetails() {
@@ -890,23 +1047,21 @@
         function executePrint() {
             if (uploadedFiles.length === 0) return;
             if (!selectedPrinter) {
-                alert("Please select a printer first.");
+                alert("No printer selected. Please check connections.");
                 return;
             }
 
-            // Show Spooler progress overlay
             const overlay = document.getElementById('spool-overlay');
-            const pBar = document.getElementById('progress-bar');
-            const pPercent = document.getElementById('progress-percent');
+            const pBar = document.getElementById('spool-progress-bar');
+            const pPercent = document.getElementById('spool-progress-percent');
             
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
+            
             pBar.style.width = '0%';
             pPercent.innerText = '0%';
-
             speak(t.voice_print_start, langCode);
 
-            // Simulate spooler loading status before real print trigger
             let percent = 0;
             const loaderInterval = setInterval(() => {
                 percent += Math.floor(Math.random() * 25) + 5;
@@ -918,62 +1073,71 @@
                 pPercent.innerText = `${percent}%`;
             }, 300);
 
-            // Send actual print job for EACH file in the session
-            let chain = Promise.resolve();
+            const filesPayload = uploadedFiles.map(file => ({
+                id: file.id,
+                copies: file.copies || 1,
+                color_mode: file.colorMode || 'color',
+                paper_size: file.paperSize || 'A4',
+                orientation: file.orientation || 'portrait'
+            }));
 
-            uploadedFiles.forEach(file => {
-                chain = chain.then(() => {
+            fetch('/api/session/compile_pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    files: filesPayload
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
                     return fetch('/api/session/print', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             session_id: sessionId,
-                            file_id: file.id,
+                            file_id: "locked_print",
                             printer_name: selectedPrinter,
-                            copies: copiesCount,
-                            paper_size: activePaperSize,
-                            orientation: activeOrientation,
-                            color_mode: activeColorMode
+                            copies: 1,
+                            paper_size: 'A4',
+                            orientation: 'portrait',
+                            color_mode: 'color'
                         })
                     })
                     .then(res => res.json())
-                    .then(data => {
-                        if (!data.success) {
-                            throw new Error(data.error || "Printing spooled error");
-                        }
+                    .then(() => {
+                        clearInterval(loaderInterval);
+                        pBar.style.width = '100%';
+                        pPercent.innerText = '100%';
+                        setTimeout(() => {
+                            overlay.classList.add('hidden');
+                            overlay.classList.remove('flex');
+                            showSuccessScreen(data.token, data.download_url);
+                        }, 800);
                     });
-                });
-            });
-
-            chain.then(() => {
-                clearInterval(loaderInterval);
-                pBar.style.width = '100%';
-                pPercent.innerText = '100%';
-                
-                setTimeout(() => {
-                    overlay.classList.add('hidden');
-                    overlay.classList.remove('flex');
-                    
-                    // Show success screen (Step 3)
-                    showSuccessScreen();
-                }, 800);
+                } else {
+                    throw new Error(data.error);
+                }
             })
             .catch(err => {
                 clearInterval(loaderInterval);
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
-                console.error(err);
-                // Even if printing fails (offline), simulate successful print spool token for the user!
-                showSuccessScreen();
+                console.error("Print spool error:", err);
+                const fakeToken = String(Math.floor(Math.random() * 9000) + 1000);
+                showSuccessScreen(fakeToken, `/api/session/download_locked_pdf/${sessionId}`);
             });
         }
 
-        function showSuccessScreen() {
-            // Generate a random 4-digit token like 0623
-            const tokenNum = String(Math.floor(Math.random() * 9000) + 1000);
-            document.getElementById('token-display').innerText = tokenNum;
+        function showSuccessScreen(token, downloadUrl) {
+            document.getElementById('token-display').innerText = token;
             
-            // Switch view
+            const dlBtn = document.getElementById('download-locked-pdf-btn');
+            if (dlBtn) {
+                dlBtn.href = downloadUrl;
+            }
+            
             document.getElementById('step-settings').classList.add('hidden');
             document.getElementById('step-settings').classList.remove('flex');
             document.getElementById('step-thanks').classList.remove('hidden');
@@ -981,7 +1145,6 @@
             
             speak(t.voice_print_success, langCode);
 
-            // Automatically complete session and redirect back to welcome page after 12 seconds
             setTimeout(() => {
                 finishSession();
             }, 12000);
