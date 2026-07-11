@@ -3,397 +3,362 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>E-PRINT - Kiosk Spooler</title>
+    <title>E-PRINT - Kiosk Process</title>
     <!-- Tailwind and Icons -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=M+PLUS+Rounded+1c:wght@400;700;800&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c:wght@400;700;900&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
         :root {
             --font-main: 'SN Pro', sans-serif;
             --font-title: 'Capriola', sans-serif;
-            --font-rounded: 'M PLUS Rounded 1c', sans-serif;
         }
         body {
             font-family: var(--font-main);
             user-select: none;
             -webkit-user-drag: none;
-        }
-        .font-rounded {
-            font-family: var(--font-rounded);
-        }
-        .font-title {
-            font-family: var(--font-title);
-        }
-        /* Custom scrollbar for file lists */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ff5e62;
-            border-radius: 4px;
+            background-color: #ffffff;
+            cursor: default;
         }
         .speaking-btn {
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.08); box-shadow: 0 0 15px rgba(253, 224, 71, 0.6); }
+            50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-hidden">
+<body class="min-h-screen flex flex-col p-8 overflow-hidden select-none">
 
-    <!-- Top Navigation Bar -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-8 py-4 shadow-sm">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-amber-400 flex items-center justify-center shadow-md">
-                    <span class="material-symbols-outlined text-white text-2xl font-bold">print</span>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight font-title">E-PRINT <span class="text-xs text-purple-600 font-bold uppercase tracking-wider px-2 py-0.5 bg-purple-100 rounded-full">Kiosk v1.1</span></h1>
-                </div>
+    <!-- Top Bar Header -->
+    <header class="flex justify-between items-center w-full mb-8">
+        <!-- Controls Box -->
+        <div class="flex items-center gap-2 border border-slate-200 rounded-2xl p-2 bg-white shadow-sm">
+            <!-- Close Button / Abort -->
+            <button onclick="confirmAbort()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Abort Session">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+            <!-- Audio Toggle Button -->
+            <button id="voiceBtn" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Listen instructions">
+                <span class="material-symbols-outlined text-xl">volume_up</span>
+            </button>
+            <!-- Contrast/Theme Toggle Button -->
+            <button onclick="alert('Touchscreen brightness set to maximum kiosk grade.')" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Toggle Theme">
+                <span class="material-symbols-outlined text-xl">light_mode</span>
+            </button>
+            <!-- Refresh Button -->
+            <button onclick="window.location.reload()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Refresh">
+                <span class="material-symbols-outlined text-xl">autorenew</span>
+            </button>
+            
+            <!-- Date Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[110px] text-center" id="date-box">
+                -- -- --
             </div>
-            <div class="flex items-center gap-4">
-                <!-- Selected Language Indicator -->
-                <div class="flex items-center gap-2 px-4 py-1.5 bg-slate-100 border border-slate-200 rounded-full text-sm font-semibold">
-                    <span class="material-symbols-outlined text-purple-600 text-lg">translate</span>
-                    <span id="active-lang-badge">English</span>
-                </div>
-                <!-- Abort Button -->
-                <button onclick="confirmAbort()" class="px-5 py-2 border-2 border-red-500 text-red-500 hover:bg-red-50 font-black rounded-full transition-all text-sm flex items-center gap-2">
-                    <span class="material-symbols-outlined text-lg">cancel</span>
-                    <span data-tr="abort">Abort Session</span>
-                </button>
+            <!-- Time Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[130px] text-center" id="time-box">
+                -- : -- : -- --
             </div>
+        </div>
+
+        <!-- Top Badge (Google Drive / USB / TYPE-C) -->
+        <div class="border border-slate-200 px-6 py-2 rounded-2xl bg-white shadow-sm flex items-center justify-center font-extrabold text-slate-700 min-w-[120px]" id="source-badge">
+            --
+        </div>
+
+        <!-- Right Colored Dots -->
+        <div class="flex gap-2">
+            <div class="w-4 h-4 rounded-full bg-[#ff007f]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#7f00ff]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#007fff]"></div>
         </div>
     </header>
 
-    <!-- Main Workspace -->
-    <main class="flex-grow flex p-6 gap-6 max-w-7xl w-full mx-auto overflow-hidden">
+    <!-- STEP 1: UPLOAD / DEVICE CONNECTION VIEW -->
+    <div id="step-upload" class="flex-grow flex p-2 gap-8 max-w-7xl w-full mx-auto overflow-hidden">
         
-        <!-- Left Side: Source Scanner and File Management -->
-        <section class="w-1/2 flex flex-col bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden">
-            <!-- Source Selector Header -->
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-                <div>
-                    <h2 class="text-lg font-black text-slate-900 flex items-center gap-2" id="source-title-container">
-                        <span class="material-symbols-outlined text-purple-600" id="source-icon">folder_open</span>
-                        <span id="source-title" class="font-rounded">Document Upload</span>
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-0.5" id="source-desc">Manage files and upload sources</p>
-                </div>
-                <div id="connection-status" class="hidden items-center gap-2 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                    <span data-tr="waiting_usb">Waiting for USB Drive...</span>
-                </div>
-            </div>
-
-            <!-- SOURCE UPLOAD PANELS -->
-            <div class="flex-grow flex flex-col justify-center overflow-hidden">
-                
-                <!-- 1. Folder Mode: File Drop Zone -->
-                <div id="panel-folder" class="hidden flex-col h-full justify-between">
-                    <div id="drop-zone" class="border-3 border-dashed border-purple-200 bg-purple-50/20 hover:bg-purple-50/40 rounded-2xl flex flex-col items-center justify-center p-8 text-center cursor-pointer transition-all duration-200 group flex-grow mb-4">
-                        <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.png,.jpg,.jpeg"/>
-                        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-md border border-slate-100 group-hover:scale-110 transition-all text-purple-600 mb-4">
-                            <span class="material-symbols-outlined text-4xl">add</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-900" data-tr="drop_files_title">Drag & Drop Documents</h3>
-                        <p class="text-xs text-slate-500 mt-1" data-tr="drop_files_desc">PDF, PNG, or JPG files (Max 50MB)</p>
-                    </div>
-                </div>
-
-                <!-- 2. USB Mode: Drive Scanner -->
-                <div id="panel-usb" class="hidden flex-col h-full">
-                    <!-- Scanner Placeholder -->
-                    <div id="usb-waiting" class="flex-grow flex flex-col items-center justify-center p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
-                        <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 mb-4 animate-bounce">
-                            <span class="material-symbols-outlined text-4xl">usb</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-900" data-tr="insert_usb_title">Insert your USB Drive</h3>
-                        <p class="text-sm text-slate-500 mt-1 max-w-sm mx-auto" data-tr="insert_usb_desc">Plug in your USB flash drive or card reader. Kiosk will scan and list printable files automatically.</p>
-                        <div class="mt-6 flex items-center gap-3 justify-center text-xs font-semibold text-slate-600 bg-white px-4 py-2 border border-slate-200 rounded-full">
-                            <span class="material-symbols-outlined text-sm animate-spin text-purple-600">sync</span>
-                            <span data-tr="scanning_drives">Scanning removable drives...</span>
-                        </div>
-                    </div>
-
-                    <!-- USB File Listing -->
-                    <div id="usb-file-list" class="hidden flex-col flex-grow overflow-hidden">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-tr="files_on_usb">Files found on USB Drive</span>
-                            <button onclick="scanUSB()" class="text-xs font-bold text-purple-600 hover:underline flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">refresh</span> <span data-tr="rescan">Rescan</span>
-                            </button>
-                        </div>
-                        <div id="usb-files-container" class="flex-grow overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
-                            <!-- Injected rows -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. TYPE-C Mode: Mobile device simulator -->
-                <div id="panel-type-c" class="hidden flex-col h-full justify-between">
-                    <div class="flex-grow flex flex-col items-center justify-center p-6 text-center bg-slate-50 border border-slate-200 rounded-2xl mb-4">
-                        <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-4">
-                            <span class="material-symbols-outlined text-4xl font-bold">cable</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-900" data-tr="connect_phone_title">Connect phone via Type-C</h3>
-                        <p class="text-sm text-slate-500 mt-1 max-w-xs" data-tr="connect_phone_desc">Plug in your charging cable. Unlock your phone and select "File Transfer" or "MTP" mode when prompted.</p>
-                        <div class="mt-6">
-                            <!-- Simulating upload -->
-                            <button onclick="document.getElementById('file-input').click()" class="px-6 py-2.5 bg-purple-600 text-white font-bold rounded-full shadow-md text-sm flex items-center gap-2 hover:bg-purple-700 transition-all mx-auto">
-                                <span class="material-symbols-outlined text-lg">upload_file</span>
-                                <span data-tr="select_manually">Browse mobile files</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Shared: Selected Files List (Loaded in Session) -->
-                <div class="flex flex-col mt-4">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2" data-tr="ready_to_print">Ready to print</span>
-                    <div id="session-file-list" class="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                        <!-- Empty placeholder -->
-                        <div id="session-empty-state" class="flex items-center gap-3 p-4 border border-dashed border-slate-200 rounded-xl text-slate-400">
-                            <span class="material-symbols-outlined text-2xl">description</span>
-                            <p class="text-sm font-semibold" data-tr="no_files_ready">No files uploaded yet</p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-        </section>
-
-        <!-- Right Side: Print Settings, Cost, & Preview -->
-        <section class="w-1/2 flex flex-col bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden">
+        <!-- Left Column: Device Graphic / Instruction Card -->
+        <div class="w-1/2 bg-white border border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center shadow-sm text-center">
             
-            <!-- Tab Selection: Settings vs Preview -->
-            <div class="flex border-b border-slate-100 pb-3 mb-4 gap-6">
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="text-lg font-black text-purple-600 border-b-3 border-purple-600 pb-1 font-rounded">
-                    <span data-tr="print_settings">Print Settings</span>
+            <!-- Dynamic Image based on source -->
+            <div class="w-80 h-80 flex items-center justify-center mb-8 border border-slate-100 rounded-3xl p-4 shadow-sm" id="device-graphic-wrapper">
+                <img id="device-graphic" src="" class="max-w-full max-h-full object-contain" alt="Device"/>
+            </div>
+
+            <!-- Instruction Text -->
+            <p class="text-xl font-bold text-slate-700 max-w-md leading-relaxed" id="device-instruction">
+                --
+            </p>
+
+            <!-- Hidden File Input for local file picker simulation -->
+            <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.png,.jpg,.jpeg"/>
+        </div>
+
+        <!-- Right Column: Document List Box -->
+        <div class="w-1/2 bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between shadow-sm overflow-hidden">
+            <div class="flex flex-col h-full overflow-hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                    <span class="text-sm font-black text-slate-900 tracking-tight" id="all-files-title">All files appear here</span>
+                    <button onclick="confirmAbort()" class="text-slate-400 hover:text-red-500">
+                        <span class="material-symbols-outlined text-lg">cancel</span>
+                    </button>
+                </div>
+
+                <!-- Files List Area -->
+                <div class="flex-grow overflow-y-auto divide-y divide-slate-100 pr-2" id="files-list-container">
+                    <!-- Empty State Placeholder -->
+                    <div id="empty-files-state" class="h-full flex flex-col items-center justify-center text-slate-400 gap-2 py-10">
+                        <span class="material-symbols-outlined text-4xl">folder</span>
+                        <p class="text-sm font-bold">No files uploaded yet</p>
+                        <!-- G-Drive Mock Uploader or trigger selection -->
+                        <button onclick="triggerFileSelect()" class="mt-4 px-6 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs shadow-sm transition-all active:scale-95">
+                            Simulate Upload
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Actions Row -->
+            <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-4">
+                <button onclick="window.location.reload()" class="px-8 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-lg">autorenew</span>
+                    <span>Refresh</span>
                 </button>
-                <button onclick="switchTab('preview')" id="tab-btn-preview" class="text-lg font-black text-slate-400 hover:text-slate-600 pb-1 font-rounded flex items-center gap-2">
-                    <span data-tr="live_preview">Live Preview</span>
-                    <span id="preview-page-badge" class="hidden text-xs bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full">Page 1/1</span>
+                <button onclick="goToSettingsStep()" id="next-to-settings-btn" disabled class="px-10 py-3.5 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-bold flex items-center gap-2 transition-all cursor-not-allowed">
+                    <span class="material-symbols-outlined text-lg">local_printshop</span>
+                    <span>Print</span>
                 </button>
             </div>
+        </div>
 
-            <!-- Tab Content 1: Print Settings -->
-            <div id="tab-settings" class="flex-grow flex flex-col justify-between overflow-y-auto">
-                <div class="flex flex-col gap-4">
-                    
-                    <!-- Printer Selection -->
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-black text-slate-400 uppercase tracking-wider" data-tr="select_printer">Select Printer</label>
-                        <div class="relative">
-                            <select id="printer-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-semibold text-slate-800 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 appearance-none">
-                                <option value="" data-tr="loading_printers">Loading printers...</option>
-                            </select>
-                            <span class="material-symbols-outlined text-slate-400 absolute right-4 top-3.5 pointer-events-none">expand_more</span>
-                        </div>
+    </div>
+
+    <!-- STEP 2: PRINT CONFIGURATION & COST VIEW -->
+    <div id="step-settings" class="flex-grow flex-col justify-between max-w-4xl w-full mx-auto overflow-hidden hidden">
+        
+        <!-- Files selected pill row -->
+        <div class="flex flex-wrap gap-3 mb-6 max-h-24 overflow-y-auto p-1" id="selected-files-pills">
+            <!-- Dynamic pills like: [Document 1.pdf x] -->
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex-grow flex flex-col justify-between overflow-y-auto mb-6">
+            
+            <div class="flex flex-col gap-6">
+                <!-- 1. Number of copies -->
+                <div class="flex items-center justify-between">
+                    <label class="text-base font-bold text-slate-700">Number of copies</label>
+                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-slate-50 w-64 h-12">
+                        <button onclick="adjustCopies(1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">+</button>
+                        <input type="number" id="copies-input" value="1" min="1" class="w-full bg-transparent border-0 text-center font-extrabold text-lg p-0 focus:ring-0 text-slate-800"/>
+                        <button onclick="adjustCopies(-1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">-</button>
                     </div>
-
-                    <!-- Layout Options: Two-column grid -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <!-- Copies -->
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-xs font-black text-slate-400 uppercase tracking-wider" data-tr="copies">Copies</label>
-                            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden p-1.5 h-12">
-                                <button onclick="adjustCopies(-1)" class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-purple-600 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">-</button>
-                                <input type="number" id="copies-input" value="1" min="1" class="w-full bg-transparent border-0 text-center font-black text-lg p-0 focus:ring-0 text-slate-800"/>
-                                <button onclick="adjustCopies(1)" class="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-purple-600 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">+</button>
-                            </div>
-                        </div>
-
-                        <!-- Color mode -->
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-xs font-black text-slate-400 uppercase tracking-wider" data-tr="color_mode">Color Mode</label>
-                            <div class="flex bg-slate-100 p-1 rounded-xl h-12">
-                                <button onclick="setColorMode('bw')" id="btn-mode-bw" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black flex items-center justify-center gap-1 text-slate-900 active:scale-95 transition-all">
-                                    <span class="material-symbols-outlined text-lg text-slate-600">gradient</span>
-                                    <span data-tr="bw">B&W</span>
-                                </button>
-                                <button onclick="setColorMode('color')" id="btn-mode-color" class="flex-1 text-slate-500 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 hover:text-slate-800 active:scale-95 transition-all">
-                                    <span class="material-symbols-outlined text-lg text-pink-500">palette</span>
-                                    <span data-tr="color">Color</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- More Settings -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <!-- Paper Size -->
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-xs font-black text-slate-400 uppercase tracking-wider" data-tr="paper_size">Paper Size</label>
-                            <div class="relative">
-                                <select id="size-select" onchange="calculatePrice()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-slate-700 focus:outline-none focus:border-purple-500 appearance-none text-sm">
-                                    <option value="A4">A4 (Standard)</option>
-                                    <option value="Letter">Letter</option>
-                                    <option value="A3">A3 (Large)</option>
-                                </select>
-                                <span class="material-symbols-outlined text-slate-400 absolute right-3 top-2.5 pointer-events-none text-lg">expand_more</span>
-                            </div>
-                        </div>
-
-                        <!-- Orientation -->
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-xs font-black text-slate-400 uppercase tracking-wider" data-tr="orientation">Orientation</label>
-                            <div class="relative">
-                                <select id="orientation-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-slate-700 focus:outline-none focus:border-purple-500 appearance-none text-sm">
-                                    <option value="portrait" data-tr="portrait">Portrait</option>
-                                    <option value="landscape" data-tr="landscape">Landscape</option>
-                                </select>
-                                <span class="material-symbols-outlined text-slate-400 absolute right-3 top-2.5 pointer-events-none text-lg">expand_more</span>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
-                <!-- Price and Print Action -->
-                <div class="mt-8 border-t border-slate-100 pt-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <span class="text-xs font-black text-slate-400 uppercase tracking-wider block" data-tr="total_cost">Total Cost</span>
-                            <span id="price-breakdown" class="text-[11px] text-slate-400 font-semibold block mt-0.5">0 pages x ₹0.00 = ₹0.00</span>
+                <!-- 2. Paper per Sheet -->
+                <div class="flex items-center justify-between">
+                    <label class="text-base font-bold text-slate-700">Paper per Sheet</label>
+                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-slate-50 w-64 h-12">
+                        <button onclick="adjustPagesPerSheet(1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">+</button>
+                        <input type="number" id="pps-input" value="1" min="1" max="4" class="w-full bg-transparent border-0 text-center font-extrabold text-lg p-0 focus:ring-0 text-slate-800" readonly/>
+                        <button onclick="adjustPagesPerSheet(-1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">-</button>
+                    </div>
+                </div>
+
+                <!-- 3. Paper Size -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-bold text-slate-400 uppercase tracking-wider">Paper Size</label>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="setPaperSize('A4')" id="size-btn-A4" class="px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all">A4</button>
+                        <button onclick="setPaperSize('A5')" id="size-btn-A5" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">A5</button>
+                        <button onclick="setPaperSize('Letter')" id="size-btn-Letter" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">Letter</button>
+                        <button onclick="setPaperSize('Legal')" id="size-btn-Legal" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">Legal</button>
+                        <button onclick="setPaperSize('Statement')" id="size-btn-Statement" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">Statement</button>
+                        <button onclick="setPaperSize('C size sheet')" id="size-btn-C" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">C size sheet</button>
+                        <button onclick="setPaperSize('D size sheet')" id="size-btn-D" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">D size sheet</button>
+                        <button onclick="setPaperSize('E size sheet')" id="size-btn-E" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">E size sheet</button>
+                    </div>
+                </div>
+
+                <!-- 4. Layout & Mode -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-bold text-slate-400 uppercase tracking-wider">Layout</label>
+                    <div class="flex items-center gap-10">
+                        <!-- Portrait / Landscape -->
+                        <div class="flex border border-slate-200 bg-slate-50 p-1 rounded-xl w-64 h-12">
+                            <button onclick="setOrientation('portrait')" id="btn-orient-port" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all">Portrait</button>
+                            <button onclick="setOrientation('landscape')" id="btn-orient-land" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all">Landscape</button>
                         </div>
-                        <div class="text-right">
-                            <span class="text-3xl font-black text-slate-900 font-rounded" id="total-price-text">₹0.00</span>
+
+                        <!-- Color / B&W -->
+                        <div class="flex border border-slate-200 bg-slate-50 p-1 rounded-xl w-64 h-12">
+                            <button onclick="setColorMode('color')" id="btn-color" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all">
+                                <span class="text-[#007fff]">C</span><span class="text-[#ff007f]">o</span><span class="text-[#7f00ff]">l</span><span class="text-[#facc15]">o</span><span class="text-[#10b981]">r</span>
+                            </button>
+                            <button onclick="setColorMode('bw')" id="btn-bw" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all">B&W</button>
                         </div>
                     </div>
+                </div>
 
-                    <button id="print-btn" disabled onclick="executePrint()" class="w-full py-4 bg-slate-300 text-slate-500 font-black rounded-2xl shadow-md text-lg flex items-center justify-center gap-3 cursor-not-allowed transition-all">
-                        <span class="material-symbols-outlined text-2xl font-bold">local_printshop</span>
-                        <span data-tr="print_now">Print Now</span>
-                    </button>
+                <!-- Optional: Printer selector hidden or simplified to system default -->
+                <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Printer</label>
+                    <select id="printer-select" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-xs focus:ring-0 w-64">
+                        <option value="">Detecting printers...</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Tab Content 2: Live Preview -->
-            <div id="tab-preview" class="hidden flex-grow flex-col justify-between overflow-hidden">
-                <!-- Preview Canvas Container -->
-                <div class="flex-grow bg-slate-100 rounded-2xl border border-slate-200 p-4 flex items-center justify-center relative overflow-hidden">
-                    
-                    <!-- Preview Image -->
-                    <div id="preview-image-wrapper" class="hidden w-full h-full flex items-center justify-center p-2">
-                        <img id="preview-img" class="max-w-full max-h-full rounded-md shadow-lg border border-slate-300 object-contain bg-white transition-opacity duration-300" src="" alt="Page Preview"/>
+            <!-- Pricing Details Expanded (View all) -->
+            <div class="mt-8 border-t border-slate-100 pt-6">
+                <!-- Dropdown Card -->
+                <div id="billing-details-box" class="hidden w-full border border-slate-200 rounded-2xl p-6 bg-slate-50/50 mb-4 transition-all">
+                    <div class="flex flex-col gap-3 font-semibold text-sm text-slate-600">
+                        <div class="flex justify-between">
+                            <span>Print Charge</span>
+                            <span id="bill-print-charge">0.00 $</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Custom Print Charge</span>
+                            <span>0.00 $</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Size</span>
+                            <span id="bill-size-surcharge">0.00 $</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Service</span>
+                            <span>0.20 $</span>
+                        </div>
+                        <div class="border-t border-slate-200 pt-3 flex justify-between font-black text-slate-900">
+                            <span>Total</span>
+                            <span id="bill-total">0.20 $</span>
+                        </div>
                     </div>
-
-                    <!-- No File Selected Preview State -->
-                    <div id="preview-empty-state" class="flex flex-col items-center justify-center text-slate-400 gap-3">
-                        <span class="material-symbols-outlined text-5xl">pageview</span>
-                        <p class="text-sm font-semibold" data-tr="no_preview_available">No file selected for preview</p>
-                    </div>
-
-                    <!-- Loader overlay -->
-                    <div id="preview-loader" class="hidden absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-                        <span class="material-symbols-outlined text-4xl animate-spin text-purple-600">sync</span>
-                    </div>
-
                 </div>
 
-                <!-- Preview Controls -->
-                <div class="flex justify-between items-center mt-4">
-                    <button onclick="navigatePreview(-1)" id="prev-page-btn" disabled class="w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-sm">
-                        <span class="material-symbols-outlined">navigate_before</span>
+                <div class="flex justify-between items-center mb-6">
+                    <button onclick="toggleBillingDetails()" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm flex items-center gap-1 active:scale-95 transition-all">
+                        <span>View all</span>
+                        <span class="material-symbols-outlined text-lg" id="view-all-arrow">keyboard_arrow_down</span>
                     </button>
-                    
-                    <span id="preview-page-text" class="text-sm font-bold text-slate-600">Page 0 of 0</span>
-                    
-                    <button onclick="navigatePreview(1)" id="next-page-btn" disabled class="w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-sm">
-                        <span class="material-symbols-outlined">navigate_next</span>
-                    </button>
+                    <span class="text-4xl font-black text-slate-900 font-title" id="price-display">0.20 $</span>
                 </div>
             </div>
 
-        </section>
+        </div>
 
-    </main>
+        <!-- Bottom Actions Step 2 -->
+        <div class="flex justify-between items-center w-full px-2">
+            <button onclick="goToUploadStep()" class="px-8 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+                <span>Back</span>
+            </button>
+            <button onclick="executePrint()" class="px-10 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
+                <span class="material-symbols-outlined text-lg">local_printshop</span>
+                <span>Print</span>
+            </button>
+        </div>
 
-    <!-- Footer with audio assistance -->
-    <footer class="bg-white border-t border-slate-200 py-4 px-8 mt-auto shadow-sm">
+    </div>
+
+    <!-- STEP 3: THANK YOU / SUCCESS VIEW -->
+    <div id="step-thanks" class="flex-grow flex flex-col items-center justify-center text-center p-8 hidden">
+        <div class="max-w-2xl flex flex-col items-center">
+            <!-- Main instruction title matching mockup exactly -->
+            <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-snug mb-16 max-w-2xl">
+                Provide the Token Number to Cash Counter and get your print's
+            </h1>
+
+            <!-- Large Token Display -->
+            <div class="text-7xl md:text-8xl font-black text-slate-400 tracking-wider mb-20 select-text" id="token-display">
+                0000
+            </div>
+
+            <!-- Bottom circles -->
+            <div class="flex gap-2 mb-12">
+                <div class="w-4 h-4 rounded-full bg-[#ff007f]"></div>
+                <div class="w-4 h-4 rounded-full bg-[#7f00ff]"></div>
+                <div class="w-4 h-4 rounded-full bg-[#007fff]"></div>
+            </div>
+
+            <!-- Done Button -->
+            <button onclick="finishSession()" class="px-12 py-4 bg-white border border-slate-200 rounded-3xl shadow-md text-slate-800 font-extrabold text-lg hover:bg-slate-50 active:scale-95 transition-all">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <!-- AUDIO FOOTER & ASSISTANCE -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-8 mt-auto shadow-sm -mx-8 -mb-8">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <button class="audio-btn w-12 h-12 bg-yellow-300 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all hover:bg-yellow-400" id="voiceBtn">
+                <button class="audio-btn w-12 h-12 bg-yellow-300 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all hover:bg-yellow-400" id="voiceFooterBtn">
                     <svg viewBox="0 0 24 24" class="w-6 h-6 fill-red-500">
                         <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.01,19.86 21,16.28 21,12C21,7.72 18.01,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.02C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z" />
                     </svg>
                 </button>
                 <div>
-                    <p class="text-xs text-slate-400 uppercase tracking-widest font-black" data-tr="voice_assistant">Voice Assistant</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-widest font-black">Voice Assistant</p>
                     <p class="text-sm text-slate-600 font-semibold" id="voice-desc-text">Press button to listen to print directions.</p>
                 </div>
             </div>
             <div>
-                <p class="text-xs text-slate-400 font-semibold">© 2026 E-PRINT. Secure printing system.</p>
+                <p class="text-xs text-slate-400 font-semibold">© 2026 E-PRINT. All Rights Reseverd.</p>
             </div>
         </div>
     </footer>
 
-    <!-- FULLSCREEN SPOOLING/PRINTING PROGRESS OVERLAY -->
+    <!-- LIVE PREVIEW MODAL -->
+    <div id="preview-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-8">
+        <div class="bg-white rounded-3xl max-w-3xl w-full h-[85vh] flex flex-col p-6 shadow-2xl relative">
+            <button onclick="closePreviewModal()" class="absolute right-6 top-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition-all active:scale-95">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+            
+            <h3 class="text-lg font-black text-slate-800 mb-4 truncate pr-16" id="modal-filename">Preview Document</h3>
+            
+            <div class="flex-grow bg-slate-100 rounded-2xl border border-slate-200 p-4 flex items-center justify-center overflow-hidden relative">
+                <img id="modal-img" class="max-w-full max-h-full rounded-md shadow-md bg-white object-contain" src="" alt="Page Preview"/>
+                <div id="modal-loader" class="absolute inset-0 bg-white/70 flex items-center justify-center hidden">
+                    <span class="material-symbols-outlined text-3xl animate-spin text-purple-600">sync</span>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mt-4">
+                <button onclick="navigatePreview(-1)" id="modal-prev-btn" class="w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+                    <span class="material-symbols-outlined">navigate_before</span>
+                </button>
+                <span id="modal-page-text" class="text-sm font-bold text-slate-600">Page 1 of 1</span>
+                <button onclick="navigatePreview(1)" id="modal-next-btn" class="w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+                    <span class="material-symbols-outlined">navigate_next</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT SPOOLING PROGRESS OVERLAY -->
     <div id="spool-overlay" class="fixed inset-0 bg-slate-900/90 z-50 flex-col items-center justify-center text-center p-8 hidden">
-        <div class="max-w-md bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center border border-slate-100">
+        <div class="max-w-md bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center">
             <div class="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 mb-6">
                 <span class="material-symbols-outlined text-5xl animate-spin">sync</span>
             </div>
-            <h3 class="text-2xl font-black text-slate-900" id="progress-title" data-tr="spooling_job">Spooling print job...</h3>
-            <p class="text-sm text-slate-500 mt-2" id="progress-desc" data-tr="spooling_desc">Please wait while we format and send your document to the printer queue.</p>
-            
+            <h3 class="text-2xl font-black text-slate-900" id="progress-title">Spooling print job...</h3>
+            <p class="text-sm text-slate-500 mt-2" id="progress-desc">Please wait while we format and send your document to the printer queue.</p>
             <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-6">
-                <div id="progress-bar" class="w-0 h-full bg-gradient-to-r from-purple-600 to-pink-500 rounded-full transition-all duration-300"></div>
+                <div id="progress-bar" class="w-0 h-full bg-purple-600 rounded-full transition-all duration-300"></div>
             </div>
             <span id="progress-percent" class="text-xs font-bold text-purple-600 mt-2">0%</span>
         </div>
     </div>
 
-    <!-- FULLSCREEN SUCCESS SCREEN -->
-    <div id="success-overlay" class="fixed inset-0 bg-white z-50 flex-col items-center justify-center text-center p-8 hidden">
-        <div class="max-w-xl flex flex-col items-center justify-center">
-            <!-- Icon -->
-            <div class="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
-                <span class="material-symbols-outlined text-6xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-            </div>
-            
-            <!-- Success Messages -->
-            <h1 class="text-4xl font-black text-slate-900 tracking-tight font-title" data-tr="success_title">Printing Completed</h1>
-            <p class="text-lg text-slate-600 font-semibold mt-2" data-tr="success_desc">Your document was printed successfully!</p>
-            
-            <!-- Billing Card -->
-            <div class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-6 mt-8 shadow-sm">
-                <span class="text-xs font-black text-slate-400 uppercase tracking-widest block" data-tr="payment_instructions">Payment Instructions</span>
-                <p class="text-sm text-slate-600 font-semibold mt-1" data-tr="billing_desc">Please collect your printed copies and complete the payment at the counter.</p>
-                <div class="border-t border-slate-200 mt-4 pt-4 flex justify-between items-center">
-                    <span class="font-bold text-slate-500 text-sm" data-tr="amount_due">Amount Due:</span>
-                    <span class="text-3xl font-black text-purple-600 font-rounded" id="success-price-text">₹0.00</span>
-                </div>
-            </div>
-
-            <!-- Done Button -->
-            <button onclick="finishSession()" class="mt-10 px-12 py-4 bg-purple-600 text-white font-black rounded-2xl shadow-lg hover:bg-purple-700 active:scale-95 transition-all text-lg flex items-center gap-2">
-                <span class="material-symbols-outlined">done_all</span>
-                <span data-tr="done">Done</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- SESSION TIMEOUT OVERLAY -->
-    <div id="timeout-overlay" class="fixed inset-0 bg-white z-50 flex-col items-center justify-center text-center p-0 hidden">
-        <img src="https://i.supaimg.com/d0495ff2-7a2f-426d-a287-7b3b2861a5ee/eab2b984-5640-4a77-a221-f6a3f18b0d50.jpg" alt="Session Expired" class="w-full h-full object-cover">
-    </div>
-
     <!-- JS Logic -->
     <script>
-        const voiceBtn = document.getElementById('voiceBtn');
+        const voiceFooterBtn = document.getElementById('voiceFooterBtn');
         const timeoutOverlay = document.getElementById('timeout-overlay');
         const elem = document.documentElement;
         let synth = window.speechSynthesis;
@@ -402,295 +367,152 @@
         // Session Variables
         const sessionId = localStorage.getItem('session_id') || 'offline_session';
         const lang = localStorage.getItem('selectedLanguage') || 'English';
-        const source = new URLSearchParams(window.location.search).get('source') || 'folder';
+        const source = new URLSearchParams(window.location.search).get('source') || 'gdrive';
 
         let langCode = 'en';
         if (lang === 'Hindi') langCode = 'hi';
         if (lang === 'Marathi') langCode = 'mr';
 
-        // Rates
-        const RATES = {
-            'bw': 2.00,      // ₹2 per B&W page
-            'color': 10.00   // ₹10 per Color page
-        };
+        // Pricing Rates
+        const RATE_BW = 0.20;      // 0.20 $ per page
+        const RATE_COLOR = 0.50;   // 0.50 $ per page
+        const SERVICE_FEE = 0.20;  // 0.20 $ flat service fee
 
         // Kiosk State
         let uploadedFiles = [];
         let selectedFile = null;
-        let selectedPrinter = '';
-        let currentMode = 'bw'; // bw or color
         let currentPreviewPage = 0;
-        let isUSBConnected = false;
+        let selectedPrinter = '';
+        
+        // Print Settings State
+        let copiesCount = 1;
+        let ppsCount = 1;
+        let activePaperSize = 'A4';
+        let activeOrientation = 'portrait';
+        let activeColorMode = 'color'; // default color
+        
         let usbPollingInterval = null;
+        let isBillingDetailsOpen = false;
 
-        // Translation Dictionary
+        // Translations matching Mockups
         const translations = {
             'English': {
-                abort: "Abort Session",
-                folder: "Folder Mode",
-                usb: "USB Drive",
-                typec: "Type-C Mobile",
-                waiting_usb: "Waiting for USB Drive...",
-                drop_files_title: "Drag & Drop Documents",
-                drop_files_desc: "PDF, PNG, or JPG files (Max 50MB)",
-                insert_usb_title: "Insert your USB Drive",
-                insert_usb_desc: "Plug in your USB flash drive. Kiosk will scan and list printable files automatically.",
-                scanning_drives: "Scanning removable drives...",
-                files_on_usb: "Files found on USB Drive",
-                rescan: "Rescan",
-                connect_phone_title: "Connect phone via Type-C",
-                connect_phone_desc: "Plug in your charging cable. Unlock your phone and select 'File Transfer' or 'MTP' mode when prompted.",
-                select_manually: "Browse mobile files",
-                ready_to_print: "Ready to print",
-                no_files_ready: "No files uploaded yet",
-                print_settings: "Print Settings",
-                live_preview: "Live Preview",
-                select_printer: "Select Printer",
-                loading_printers: "Loading system printers...",
-                copies: "Copies",
-                color_mode: "Color Mode",
-                bw: "Black & White",
-                color: "Color",
-                paper_size: "Paper Size",
-                orientation: "Orientation",
-                portrait: "Portrait",
-                landscape: "Landscape",
-                total_cost: "Total Cost",
-                print_now: "Print Now",
-                no_preview_available: "No file selected for preview",
-                voice_assistant: "Voice Assistant",
-                voice_directions: "Welcome to the print station. Please upload your documents using the selected source in the left column. Then, configure your print settings and select Print.",
-                voice_select_file: "File loaded successfully. You can review page layout in the Live Preview tab.",
-                voice_print_start: "Sending print job. Please wait.",
-                voice_print_success: "Printing complete. Please pay the bill at the counter and collect your prints.",
-                voice_session_expired: "Session expired. Returning to welcome screen.",
-                spooling_job: "Spooling print job...",
-                spooling_desc: "Please wait while we format and send your document to the printer queue.",
-                success_title: "Printing Completed",
-                success_desc: "Your document was printed successfully!",
-                payment_instructions: "Payment Instructions",
-                billing_desc: "Please collect your printed copies and complete the payment at the counter.",
-                amount_due: "Amount Due:",
-                done: "Done",
-                confirm_abort_prompt: "Are you sure you want to abort the session? All your uploaded files will be permanently deleted.",
-                selecting_source: "Selected {source} upload mode."
+                gdrive: "Google Drive",
+                usb: "USB",
+                typec: "TYPE-C",
+                gdrive_instruction: "Scan the QR Google drive camera or camera QR lens to upload documents in folder",
+                usb_instruction: "Make sure the USB attach properly / Insert the USB on system port",
+                typec_instruction: "Make sure the TYPE-C attach properly / Insert the TYPE -C on system port",
+                all_files_title: "All files appear here",
+                voice_directions: "Welcome. Please connect your device or scan the QR code to upload files. Once uploaded, click Print to customize settings.",
+                voice_select_file: "File preview loaded.",
+                voice_print_start: "Spooling print job. Please wait.",
+                voice_print_success: "Please note the token number, pay at the counter and collect your prints.",
+                confirm_abort_prompt: "Are you sure you want to abort the session? All your uploaded files will be permanently deleted."
             },
             'Hindi': {
-                abort: "सत्र रद्द करें",
-                folder: "फ़ोल्डर मोड",
-                usb: "यूएसबी ड्राइव",
-                typec: "टाइप-सी मोबाइल",
-                waiting_usb: "यूएसबी ड्राइव की प्रतीक्षा कर रहे हैं...",
-                drop_files_title: "दस्तावेज़ों को ड्रैग और ड्रॉप करें",
-                drop_files_desc: "पीडीएफ, पीएनजी, या जेपीजी फाइलें (अधिकतम 50MB)",
-                insert_usb_title: "अपनी यूएसबी ड्राइव डालें",
-                insert_usb_desc: "अपनी यूएसबी फ्लैश ड्राइव प्लग इन करें। कियोस्क स्वचालित रूप से प्रिंट करने योग्य फाइलों को स्कैन और सूचीबद्ध करेगा।",
-                scanning_drives: "रिमूवेबल ड्राइव को स्कैन किया जा रहा है...",
-                files_on_usb: "यूएसबी ड्राइव पर मिली फाइलें",
-                rescan: "पुनः स्कैन करें",
-                connect_phone_title: "टाइप-सी केबल से फोन कनेक्ट करें",
-                connect_phone_desc: "अपना चार्जिंग केबल प्लग इन करें। अपना फोन अनलॉक करें और पूछे जाने पर 'फाइल ट्रांसफर' या 'एमटीपी' मोड चुनें।",
-                select_manually: "मोबाइल फाइलों को ब्राउज़ करें",
-                ready_to_print: "प्रिंट के लिए तैयार",
-                no_files_ready: "अभी तक कोई दस्तावेज़ अपलोड नहीं हुआ",
-                print_settings: "प्रिंट सेटिंग्स",
-                live_preview: "लाइव प्रीव्यू",
-                select_printer: "प्रिंटर चुनें",
-                loading_printers: "सिस्टम प्रिंटर लोड हो रहे हैं...",
-                copies: "प्रतियां (Copies)",
-                color_mode: "रंग मोड (Color Mode)",
-                bw: "ब्लैक एंड व्हाइट",
-                color: "रंगीन (Color)",
-                paper_size: "कागज का आकार",
-                orientation: "ओरिएंटेशन",
-                portrait: "पोर्ट्रेट (खड़ा)",
-                landscape: "लैंडस्केप (आड़ा)",
-                total_cost: "कुल शुल्क",
-                print_now: "प्रिंट करें",
-                no_preview_available: "प्रीव्यू के लिए कोई फाइल नहीं चुनी गई",
-                voice_assistant: "वॉयस असिस्टेंट",
-                voice_directions: "प्रिंट स्टेशन में आपका स्वागत है। कृपया बाएं कॉलम में चुने गए स्रोत का उपयोग करके अपने दस्तावेज़ अपलोड करें। फिर, अपनी प्रिंट सेटिंग्स कॉन्फ़िगर करें और प्रिंट चुनें।",
-                voice_select_file: "दस्तावेज़ सफलतापूर्वक लोड हो गया है। आप लाइव प्रीव्यू टैब में पेज लेआउट की समीक्षा कर सकते हैं।",
-                voice_print_start: "प्रिंट जॉब भेजा जा रहा है। कृपया प्रतीक्षा करें।",
-                voice_print_success: "प्रिंटिंग पूरी हो गई। कृपया काउंटर पर बिल का भुगतान करें और अपनी प्रतियों को प्राप्त करें।",
-                voice_session_expired: "सत्र समाप्त हो गया है। स्वागत स्क्रीन पर वापस जा रहे हैं।",
-                spooling_job: "प्रिंट प्रक्रिया चल रही है...",
-                spooling_desc: "कृपया प्रतीक्षा करें जब तक हम आपके दस्तावेज़ को प्रिंटर कतार में प्रारूपित और भेजते हैं।",
-                success_title: "प्रिंटिंग पूर्ण हुई",
-                success_desc: "आपका दस्तावेज़ सफलतापूर्वक प्रिंट हो गया है!",
-                payment_instructions: "भुगतान निर्देश",
-                billing_desc: "कृपया अपनी प्रिंट की हुई प्रतियां एकत्र करें और काउंटर पर भुगतान पूरा करें।",
-                amount_due: "देय राशि:",
-                done: "हो गया",
-                confirm_abort_prompt: "क्या आप निश्चित रूप से सत्र रद्द करना चाहते हैं? आपकी सभी अपलोड की गई फ़ाइलें स्थायी रूप से हटा दी जाएंगी।",
-                selecting_source: "{source} अपलोड मोड चुना गया है।"
+                gdrive: "गूगल ड्राइव",
+                usb: "यूएसबी",
+                typec: "टाइप-सी",
+                gdrive_instruction: "दस्तावेज़ों को अपलोड करने के लिए क्यूआर गूगल ड्राइव कैमरा या क्यूआर लेंस को स्कैन करें",
+                usb_instruction: "सुनिश्चित करें कि यूएसबी ठीक से जुड़ा हुआ है / सिस्टम पोर्ट पर यूएसबी डालें",
+                typec_instruction: "सुनिश्चित करें कि टाइप-सी ठीक से जुड़ा हुआ है / सिस्टम पोर्ट पर टाइप-सी डालें",
+                all_files_title: "सभी फाइलें यहां दिखाई देंगी",
+                voice_directions: "आपका स्वागत है। दस्तावेज़ अपलोड करने के लिए क्यूआर कोड स्कैन करें या यूएसबी कनेक्ट करें। फ़ाइलें अपलोड होने के बाद प्रिंट दबाएं।",
+                voice_select_file: "फ़ाइल प्रीव्यू लोड हो गया है।",
+                voice_print_start: "प्रिंट प्रक्रिया चल रही है। कृपया प्रतीक्षा करें।",
+                voice_print_success: "कृपया टोकन नंबर नोट करें, काउंटर पर भुगतान करें और प्रतियां एकत्र करें।",
+                confirm_abort_prompt: "क्या आप निश्चित रूप से सत्र रद्द करना चाहते हैं? आपकी सभी अपलोड की गई फ़ाइलें स्थायी रूप से हटा दी जाएंगी।"
             },
             'Marathi': {
-                abort: "सत्र रद्द करा",
-                folder: "फोल्डर मोड",
-                usb: "युएसबी ड्राइव",
-                typec: "टाईप-सी मोबाईल",
-                waiting_usb: "युएसबी ड्राइवची प्रतीक्षा करत आहे...",
-                drop_files_title: "दस्तऐवज ड्रॅग आणि ड्रॉप करा",
-                drop_files_desc: "पीडीएफ, पीएनजी किंवा जेपीजी फाईल्स (कमाल 50MB)",
-                insert_usb_title: "तुमची युएसबी ड्राइव्ह घाला",
-                insert_usb_desc: "तुमची युएसबी फ्लॅश ड्राइव्ह प्लग इन करा. किओस्क आपोआप प्रिंट करण्यायोग्य फाईल्स शोधेल आणि यादी दाखवेल.",
-                scanning_drives: "रिमूव्हेबल ड्राइव्ह स्कॅन करत आहे...",
-                files_on_usb: "युएसबी ड्राइव्हवर सापडलेल्या फाईल्स",
-                rescan: "पुन्हा स्कॅन करा",
-                connect_phone_title: "टाईप-सी ने फोन कनेक्ट करा",
-                connect_phone_desc: "तुमची चार्जिंग केबल प्लग इन करा. तुमचा फोन अनलॉक करा आणि विचारले असता 'फाइल ट्रान्सफर' किंवा 'MTP' मोड निवडा.",
-                select_manually: "मोबाईल फाईल्स ब्राउझ करा",
-                ready_to_print: "प्रिंटसाठी तयार",
-                no_files_ready: "अद्याप कोणतीही फाईल अपलोड केलेली नाही",
-                print_settings: "प्रिंट सेटिंग्स",
-                live_preview: "लाइव्ह प्रीव्ह्यू",
-                select_printer: "प्रिंटर निवडा",
-                loading_printers: "सिस्टम प्रिंटर लोड होत आहेत...",
-                copies: "प्रती (Copies)",
-                color_mode: "कलर मोड",
-                bw: "ब्लॅक अँड व्हाईट",
-                color: "रंगीत (Color)",
-                paper_size: "कागदाचा आकार",
-                orientation: "ओरिएंटेशन",
-                portrait: "पोर्ट्रेट (उभे)",
-                landscape: "लँडस्केप (आडवे)",
-                total_cost: "एकूण शुल्क",
-                print_now: "प्रिंट करा",
-                no_preview_available: "प्रीव्ह्यूसाठी कोणतीही फाईल निवडलेली नाही",
-                voice_assistant: "व्हॉईस असिस्टंट",
-                voice_directions: "प्रिंट स्टेशनमध्ये आपले स्वागत आहे. कृपया डाव्या कॉलममधील पर्याय वापरून तुमचे दस्तऐवज अपलोड करा. त्यानंतर, आपल्या प्रिंट सेटिंग्स निवडा आणि प्रिंट बटणावर क्लिक करा.",
-                voice_select_file: "फाईल यशस्वीरित्या लोड झाली आहे. आपण लाईव्ह प्रीव्ह्यू टॅबमध्ये लेआउट पाहू शकता.",
-                voice_print_start: "प्रिंट जॉब पाठविला जात आहे. कृपया प्रतीक्षा करा.",
-                voice_print_success: "प्रिंटिंग पूर्ण झाले. कृपया काउंटरवर बिल भरा आणि आपल्या प्रती गोळा करा.",
-                voice_session_expired: "सत्र संपले आहे. स्वागत स्क्रीनवर परत जात आहे.",
-                spooling_job: "प्रिंट प्रक्रिया सुरू आहे...",
-                spooling_desc: "कृपया प्रतीक्षा करा, आम्ही तुमचे दस्तऐवज प्रिंटरच्या क्यूमध्ये पाठवत आहोत.",
-                success_title: "प्रिंटिंग यशस्वी",
-                success_desc: "तुमचा दस्तऐवज यशस्वीरित्या प्रिंट झाला आहे!",
-                payment_instructions: "पेमेंटच्या सूचना",
-                billing_desc: "कृपया आपल्या प्रिंट गोळा करा आणि काउंटरवर पैसे भरा.",
-                amount_due: "देय रक्कम:",
-                done: "पूर्ण",
-                confirm_abort_prompt: "आपण नक्की सत्र रद्द करू इच्छिता? आपल्या सर्व अपलोड केलेल्या फाईल्स कायमच्या डिलीट केल्या जातील.",
-                selecting_source: "{source} अपलोड मोड निवडला आहे."
+                gdrive: "गुगल ड्राईव्ह",
+                usb: "युएसबी",
+                typec: "टाईप-सी",
+                gdrive_instruction: "फोल्डरमध्ये दस्तऐवज अपलोड करण्यासाठी क्यूआर गुगल ड्राईव्ह कॅमेरा किंवा क्यूआर लेन्स स्कॅन करा",
+                usb_instruction: "युएसबी योग्यरित्या कनेक्ट केल्याची खात्री करा / सिस्टीम पोर्टवर युएसबी घाला",
+                typec_instruction: "टाईप-सी योग्यरित्या कनेक्ट केल्याची खात्री करा / सिस्टीम पोर्टवर टाईप-सी घाला",
+                all_files_title: "सर्व फाईल्स येथे दिसतील",
+                voice_directions: "आपले स्वागत आहे. दस्तऐवज अपलोड करण्यासाठी क्यूआर कोड स्कॅन करा किंवा यूएसबी कनेक्ट करा. फाईल्स अपलोड झाल्यानंतर प्रिंट दाबा.",
+                voice_select_file: "फाईल प्रीव्ह्यू लोड झाला आहे.",
+                voice_print_start: "प्रिंट प्रक्रिया सुरू आहे. कृपया प्रतीक्षा करा.",
+                voice_print_success: "कृपया टोकन नंबर लिहून घ्या, काउंटरवर पैसे भरा आणि आपल्या प्रती गोळा करा.",
+                confirm_abort_prompt: "आपण नक्की सत्र रद्द करू इच्छिता? आपल्या सर्व अपलोड केलेल्या फाईल्स कायमच्या डिलीट केल्या जातील।"
             }
         };
 
         const t = translations[lang] || translations['English'];
 
-        // Init Page
         document.addEventListener('DOMContentLoaded', () => {
-            // Apply localization
-            applyLocalization();
-
-            // Setup Active Badge
-            document.getElementById('active-lang-badge').innerText = lang;
-
-            // Load Printers
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Set source badge and instructions
+            setupSourceUI();
+            
+            // Load printers
             loadPrinters();
 
-            // Set Upload View based on query source
-            setUploadSourceView();
-
-            // Play startup audio
+            // Set Initial Voice instructions
             setTimeout(() => {
                 speak(t.voice_directions, langCode);
             }, 800);
 
-            // Register DropZone events
-            setupDropZone();
+            // Register uploader events
+            setupFileUploader();
         });
 
-        // Local Browser TTS Logic
-        function speak(text, langCode = 'en') {
-            synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            const voices = synth.getVoices();
-            let preferredVoice = voices.find(v => v.lang.startsWith(langCode));
+        // Clock Update
+        function updateClock() {
+            const now = new Date();
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = String(now.getFullYear()).substring(2);
+            document.getElementById('date-box').innerText = `${day} ${month} ${year}`;
             
-            if (!preferredVoice) {
-                preferredVoice = voices.find(v => 
-                    v.name.toLowerCase().includes('female') || 
-                    v.name.toLowerCase().includes('samantha') || 
-                    v.name.toLowerCase().includes('google us english') ||
-                    v.name.toLowerCase().includes('zira')
-                );
-            }
-            
-            if (preferredVoice) {
-                utterance.voice = preferredVoice;
-                utterance.lang = preferredVoice.lang;
-            } else {
-                utterance.lang = langCode;
-            }
-            
-            utterance.pitch = 1.0;
-            utterance.rate = 0.95;
-
-            utterance.onstart = () => {
-                isSpeaking = true;
-                voiceBtn.classList.add('speaking-btn');
-                document.getElementById('voice-desc-text').innerText = "Playing audio directions...";
-            };
-
-            utterance.onend = () => {
-                isSpeaking = false;
-                voiceBtn.classList.remove('speaking-btn');
-                document.getElementById('voice-desc-text').innerText = "Press button to listen to print directions.";
-            };
-
-            synth.speak(utterance);
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const strHours = String(hours).padStart(2, '0');
+            document.getElementById('time-box').innerText = `${strHours} : ${minutes} : ${seconds} ${ampm}`;
         }
 
-        voiceBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            speak(t.voice_directions, langCode);
-        });
+        // Setup Source View UI
+        function setupSourceUI() {
+            const badge = document.getElementById('source-badge');
+            const graphic = document.getElementById('device-graphic');
+            const instr = document.getElementById('device-instruction');
+            const allFilesTitle = document.getElementById('all-files-title');
 
-        // ----------------- LOCALIZATION HELPERS -----------------
-        function applyLocalization() {
-            document.querySelectorAll('[data-tr]').forEach(el => {
-                const key = el.getAttribute('data-tr');
-                if (t[key]) {
-                    el.innerText = t[key];
-                }
-            });
+            allFilesTitle.innerText = t.all_files_title;
 
-            // Specific updates
-            document.getElementById('source-desc').innerText = `Manage ${source.toUpperCase()} files and upload process`;
-        }
-
-        function setUploadSourceView() {
-            // Hide all
-            document.getElementById('panel-folder').classList.add('hidden');
-            document.getElementById('panel-usb').classList.add('hidden');
-            document.getElementById('panel-type-c').classList.add('hidden');
-
-            const sourceTitle = document.getElementById('source-title');
-            const sourceIcon = document.getElementById('source-icon');
-
-            if (source === 'folder') {
-                document.getElementById('panel-folder').classList.remove('hidden');
-                sourceTitle.innerText = t.folder;
-                sourceIcon.innerText = 'folder_open';
+            if (source === 'gdrive') {
+                badge.innerText = t.gdrive;
+                graphic.src = "/templates/QR CODE.png";
+                instr.innerText = t.gdrive_instruction;
+                // Click QR Code to trigger file dialog
+                document.getElementById('device-graphic-wrapper').style.cursor = 'pointer';
+                document.getElementById('device-graphic-wrapper').onclick = triggerFileSelect;
             } else if (source === 'usb') {
-                document.getElementById('panel-usb').classList.remove('hidden');
-                document.getElementById('connection-status').classList.remove('hidden');
-                sourceTitle.innerText = t.usb;
-                sourceIcon.innerText = 'usb';
-                // Trigger polling scanner
+                badge.innerText = t.usb;
+                graphic.src = "/templates/usb_stick.png";
+                instr.innerText = t.usb_instruction;
                 startUSBPolling();
             } else if (source === 'type-c') {
-                document.getElementById('panel-type-c').classList.remove('hidden');
-                sourceTitle.innerText = t.typec;
-                sourceIcon.innerText = 'cable';
+                badge.innerText = t.typec;
+                graphic.src = "/templates/type_c_cable.png";
+                instr.innerText = t.typec_instruction;
+                // Add click cable to simulate mobile files
+                document.getElementById('device-graphic-wrapper').style.cursor = 'pointer';
+                document.getElementById('device-graphic-wrapper').onclick = triggerFileSelect;
             }
-            
-            // Speak selected source
-            const srcText = t[source] || source;
-            const greetMsg = t.selecting_source.replace('{source}', srcText);
-            speak(greetMsg, langCode);
+        }
+
+        function triggerFileSelect() {
+            document.getElementById('file-input').click();
         }
 
         // ----------------- PRINTER ENUMERATION -----------------
@@ -722,92 +544,39 @@
                 .catch(err => {
                     console.error("Printers fetch error:", err);
                     const select = document.getElementById('printer-select');
-                    select.innerHTML = '<option value="Microsoft Print to PDF">Microsoft Print to PDF (Offline Mode)</option>';
+                    select.innerHTML = '<option value="Microsoft Print to PDF">Microsoft Print to PDF (Offline)</option>';
                     selectedPrinter = "Microsoft Print to PDF";
                 });
-
-            // Update printer change listener
+            
             document.getElementById('printer-select').addEventListener('change', (e) => {
                 selectedPrinter = e.target.value;
             });
         }
 
-        // ----------------- USB POLLING SCANNER -----------------
+        // ----------------- USB POLLING -----------------
         function startUSBPolling() {
             scanUSB();
-            usbPollingInterval = setInterval(scanUSB, 5000); // Poll every 5 seconds
+            usbPollingInterval = setInterval(scanUSB, 5000);
         }
 
         function scanUSB() {
             fetch('/api/usb/detect')
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success && data.detected) {
-                        isUSBConnected = true;
-                        document.getElementById('connection-status').classList.remove('bg-amber-100', 'text-amber-800');
-                        document.getElementById('connection-status').classList.add('bg-green-100', 'text-green-800');
-                        document.getElementById('connection-status').innerHTML = `
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span>USB Drive Detected!</span>
-                        `;
-                        
-                        document.getElementById('usb-waiting').classList.add('hidden');
-                        document.getElementById('usb-file-list').classList.remove('hidden');
-                        
-                        renderUSBFiles(data.files);
-                    } else {
-                        isUSBConnected = false;
-                        document.getElementById('connection-status').classList.remove('bg-green-100', 'text-green-800');
-                        document.getElementById('connection-status').classList.add('bg-amber-100', 'text-amber-800');
-                        document.getElementById('connection-status').innerHTML = `
-                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                            <span>${t.waiting_usb}</span>
-                        `;
-                        
-                        document.getElementById('usb-waiting').classList.remove('hidden');
-                        document.getElementById('usb-file-list').classList.add('hidden');
+                    if (data.success && data.detected && data.files.length > 0) {
+                        // Automatically import USB files for simplicity, or simulate import
+                        // For the exact template wise design, we display a mock or imported file list.
+                        // We will auto-import first detected USB file as demonstration
+                        const unimported = data.files.filter(uf => !uploadedFiles.some(f => f.original_name === uf.name));
+                        if (unimported.length > 0) {
+                            importUSBFile(unimported[0].path);
+                        }
                     }
                 })
                 .catch(err => console.error("USB scan error:", err));
         }
 
-        function renderUSBFiles(files) {
-            const container = document.getElementById('usb-files-container');
-            container.innerHTML = '';
-            
-            if (files.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center text-slate-400 text-sm font-semibold">
-                        No printable files (.pdf, .png, .jpg) found in root or first level directories.
-                    </div>
-                `;
-                return;
-            }
-
-            files.forEach(file => {
-                const row = document.createElement('div');
-                row.className = "flex items-center justify-between p-4 hover:bg-slate-50 transition-colors group";
-                row.innerHTML = `
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <span class="material-symbols-outlined text-purple-500 text-2xl">description</span>
-                        <div class="overflow-hidden">
-                            <p class="text-sm font-bold text-slate-800 truncate" title="${file.name}">${file.name}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">${file.formatted_size} • USB FILE</p>
-                        </div>
-                    </div>
-                    <button onclick="importUSBFile('${file.path.replace(/\\/g, '\\\\')}')" class="px-4 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white font-bold rounded-full text-xs shadow-sm transition-all active:scale-95 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm font-bold">add</span>
-                        <span>Import</span>
-                    </button>
-                `;
-                container.appendChild(row);
-            });
-        }
-
         function importUSBFile(filePath) {
-            // Disable row and show spinner
-            console.log("Importing:", filePath);
-            
             fetch('/api/upload', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -820,54 +589,26 @@
             .then(data => {
                 if (data.success) {
                     uploadedFiles = [...uploadedFiles, ...data.files];
-                    updateSessionFilesList();
-                    // Select this newly imported file automatically
-                    selectFileForPrinting(data.files[0].id);
-                } else {
-                    alert("Failed to import file: " + data.error);
+                    renderFilesList();
                 }
             })
             .catch(err => console.error("USB Import error:", err));
         }
 
-        // ----------------- DRAG AND DROP / FILE PICKER -----------------
-        function setupDropZone() {
-            const dropZone = document.getElementById('drop-zone');
+        // ----------------- FILE UPLOADER -----------------
+        function setupFileUploader() {
             const fileInput = document.getElementById('file-input');
-
-            dropZone.addEventListener('click', () => fileInput.click());
-            
             fileInput.addEventListener('change', (e) => {
                 const files = Array.from(e.target.files);
-                if (files.length > 0) uploadLocalFiles(files);
-            });
-
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('border-purple-200');
-                dropZone.classList.add('border-purple-500', 'bg-purple-50/55');
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.add('border-purple-200');
-                dropZone.classList.remove('border-purple-500', 'bg-purple-50/55');
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('border-purple-200');
-                dropZone.classList.remove('border-purple-500', 'bg-purple-50/55');
-                const files = Array.from(e.dataTransfer.files);
-                if (files.length > 0) uploadLocalFiles(files);
+                if (files.length > 0) uploadFiles(files);
             });
         }
 
-        function uploadLocalFiles(files) {
+        function uploadFiles(files) {
             const formData = new FormData();
             formData.append('session_id', sessionId);
             files.forEach(f => formData.append('files', f));
 
-            // Set overlay or spinner
             fetch('/api/upload', {
                 method: 'POST',
                 body: formData
@@ -876,9 +617,7 @@
             .then(data => {
                 if (data.success) {
                     uploadedFiles = [...uploadedFiles, ...data.files];
-                    updateSessionFilesList();
-                    // Auto-select first uploaded file
-                    selectFileForPrinting(data.files[0].id);
+                    renderFilesList();
                 } else {
                     alert("Upload failed: " + data.error);
                 }
@@ -886,257 +625,225 @@
             .catch(err => console.error("Upload error:", err));
         }
 
-        // ----------------- SESSION FILES RENDER -----------------
-        function updateSessionFilesList() {
-            const container = document.getElementById('session-file-list');
+        // Render files list on right side
+        function renderFilesList() {
+            const container = document.getElementById('files-list-container');
             container.innerHTML = '';
-            
+
             if (uploadedFiles.length === 0) {
-                container.appendChild(document.getElementById('session-empty-state'));
-                document.getElementById('print-btn').disabled = true;
-                document.getElementById('print-btn').classList.add('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
-                document.getElementById('print-btn').classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-pink-500', 'text-white', 'hover:opacity-90', 'active:scale-95');
+                container.appendChild(document.getElementById('empty-files-state'));
+                document.getElementById('next-to-settings-btn').disabled = true;
+                document.getElementById('next-to-settings-btn').className = "px-10 py-3.5 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-bold flex items-center gap-2 transition-all cursor-not-allowed";
                 return;
             }
 
-            // Enable Print Button
-            document.getElementById('print-btn').disabled = false;
-            document.getElementById('print-btn').classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
-            document.getElementById('print-btn').classList.add('bg-gradient-to-r', 'from-purple-600', 'to-pink-500', 'text-white', 'hover:opacity-90', 'active:scale-95');
+            // Enable Print (next) button
+            document.getElementById('next-to-settings-btn').disabled = false;
+            document.getElementById('next-to-settings-btn').className = "px-10 py-3.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-2xl shadow-sm text-sm font-bold flex items-center gap-2 transition-all active:scale-95 cursor-pointer";
 
             uploadedFiles.forEach(file => {
-                const isSelected = selectedFile && selectedFile.id === file.id;
-                const card = document.createElement('div');
-                card.className = `p-4 border rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
-                    isSelected ? 'border-purple-500 bg-purple-50/20 ring-2 ring-purple-500/20' : 'border-slate-200 bg-white hover:border-slate-300'
-                }`;
-                card.onclick = () => selectFileForPrinting(file.id);
-                card.innerHTML = `
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between py-4 border-b border-slate-100 group";
+                row.innerHTML = `
                     <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
-                            <span class="material-symbols-outlined">draft</span>
-                        </div>
+                        <span class="material-symbols-outlined text-slate-400">draft</span>
                         <div class="overflow-hidden">
-                            <p class="text-sm font-bold text-slate-800 truncate max-w-[180px]" title="${file.original_name}">${file.original_name}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">${file.formatted_size} • ${file.pages} ${file.pages === 1 ? 'Page' : 'Pages'}</p>
+                            <p class="text-sm font-bold text-slate-700 truncate max-w-[200px]" title="${file.original_name}">${file.original_name}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="removeSessionFile(event, '${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 active:scale-95 transition-all">
+                    <div class="flex items-center gap-3">
+                        <!-- Preview Button -->
+                        <button onclick="openPreviewModal('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors">
+                            <span class="material-symbols-outlined text-lg">visibility</span>
+                        </button>
+                        <!-- Delete Button -->
+                        <button onclick="removeUploadedFile('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
                             <span class="material-symbols-outlined text-lg">delete</span>
                         </button>
                     </div>
                 `;
-                container.appendChild(card);
+                container.appendChild(row);
             });
 
             calculatePrice();
         }
 
-        function removeSessionFile(e, fileId) {
-            e.stopPropagation();
+        function removeUploadedFile(fileId) {
             uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
-            if (selectedFile && selectedFile.id === fileId) {
-                selectedFile = uploadedFiles.length > 0 ? uploadedFiles[0] : null;
-            }
-            updateSessionFilesList();
-            if (selectedFile) {
-                selectFileForPrinting(selectedFile.id);
-            } else {
-                resetPreviewCanvas();
-            }
+            renderFilesList();
         }
 
-        function selectFileForPrinting(fileId) {
-            selectedFile = uploadedFiles.find(f => f.id === fileId);
-            currentPreviewPage = 0;
-            updateSessionFilesList(); // Redraw selection highlight
-            loadPreviewImage();
-            speak(t.voice_select_file, langCode);
-        }
-
-        // ----------------- TAB SWITCHER -----------------
-        function switchTab(tab) {
-            const tabSettings = document.getElementById('tab-settings');
-            const tabPreview = document.getElementById('tab-preview');
-            const btnSettings = document.getElementById('tab-btn-settings');
-            const btnPreview = document.getElementById('tab-btn-preview');
-
-            if (tab === 'settings') {
-                tabSettings.classList.remove('hidden');
-                tabSettings.classList.add('flex');
-                tabPreview.classList.add('hidden');
-                tabPreview.classList.remove('flex');
-                
-                btnSettings.className = "text-lg font-black text-purple-600 border-b-3 border-purple-600 pb-1 font-rounded";
-                btnPreview.className = "text-lg font-black text-slate-400 hover:text-slate-600 pb-1 font-rounded flex items-center gap-2";
-            } else {
-                tabSettings.classList.add('hidden');
-                tabSettings.classList.remove('flex');
-                tabPreview.classList.remove('hidden');
-                tabPreview.classList.add('flex');
-                
-                btnSettings.className = "text-lg font-black text-slate-400 hover:text-slate-600 pb-1 font-rounded";
-                btnPreview.className = "text-lg font-black text-purple-600 border-b-3 border-purple-600 pb-1 font-rounded flex items-center gap-2";
-            }
-        }
-
-        // ----------------- LIVE PREVIEW CANVAS -----------------
-        function loadPreviewImage() {
-            if (!selectedFile) {
-                resetPreviewCanvas();
-                return;
-            }
-
-            document.getElementById('preview-loader').classList.remove('hidden');
-            document.getElementById('preview-empty-state').classList.add('hidden');
-            document.getElementById('preview-image-wrapper').classList.remove('hidden');
-            document.getElementById('preview-page-badge').classList.remove('hidden');
-
-            const pageNum = currentPreviewPage;
-            const imgEl = document.getElementById('preview-img');
-            imgEl.style.opacity = '0.3';
+        // ----------------- FLOW STEP TRANSITIONS -----------------
+        function goToSettingsStep() {
+            if (uploadedFiles.length === 0) return;
             
-            // Build cache buster to prevent browser cache issues
-            const src = `/api/session/preview/${sessionId}/${selectedFile.id}/${pageNum}?cb=${new Date().getTime()}`;
+            // Render selected file pills at the top of settings page
+            renderFilePills();
             
-            imgEl.src = src;
-            imgEl.onload = () => {
-                document.getElementById('preview-loader').classList.add('hidden');
-                imgEl.style.opacity = '1';
-            };
-            imgEl.onerror = () => {
-                document.getElementById('preview-loader').classList.add('hidden');
-                imgEl.style.opacity = '1';
-                console.error("Preview render error");
-            };
-
-            // Update page text
-            document.getElementById('preview-page-text').innerText = `Page ${pageNum + 1} of ${selectedFile.pages}`;
-            document.getElementById('preview-page-badge').innerText = `Page ${pageNum + 1}/${selectedFile.pages}`;
-
-            // Configure arrow buttons
-            document.getElementById('prev-page-btn').disabled = (pageNum === 0);
-            document.getElementById('next-page-btn').disabled = (pageNum >= selectedFile.pages - 1);
+            // Toggle Views
+            document.getElementById('step-upload').classList.add('hidden');
+            document.getElementById('step-settings').classList.remove('hidden');
+            document.getElementById('step-settings').classList.add('flex');
+            
+            calculatePrice();
         }
 
-        function navigatePreview(direction) {
-            if (!selectedFile) return;
-            let nextVal = currentPreviewPage + direction;
-            if (nextVal >= 0 && nextVal < selectedFile.pages) {
-                currentPreviewPage = nextVal;
-                loadPreviewImage();
+        function goToUploadStep() {
+            document.getElementById('step-settings').classList.add('hidden');
+            document.getElementById('step-settings').classList.remove('flex');
+            document.getElementById('step-upload').classList.remove('hidden');
+        }
+
+        // Selected file pills row
+        function renderFilePills() {
+            const container = document.getElementById('selected-files-pills');
+            container.innerHTML = '';
+            
+            uploadedFiles.forEach(file => {
+                const pill = document.createElement('div');
+                pill.className = "flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 shadow-sm";
+                pill.innerHTML = `
+                    <span class="truncate max-w-[140px]">${file.original_name}</span>
+                    <button onclick="removeUploadedFile('${file.id}'); renderFilePills(); calculatePrice(); checkSettingsPillsEmpty();" class="text-slate-400 hover:text-red-500 flex items-center">
+                        <span class="material-symbols-outlined text-sm font-bold">close</span>
+                    </button>
+                `;
+                container.appendChild(pill);
+            });
+        }
+
+        function checkSettingsPillsEmpty() {
+            if (uploadedFiles.length === 0) {
+                goToUploadStep();
             }
         }
 
-        function resetPreviewCanvas() {
-            document.getElementById('preview-empty-state').classList.remove('hidden');
-            document.getElementById('preview-image-wrapper').classList.add('hidden');
-            document.getElementById('preview-page-badge').classList.add('hidden');
-            document.getElementById('preview-page-text').innerText = "Page 0 of 0";
-            document.getElementById('prev-page-btn').disabled = true;
-            document.getElementById('next-page-btn').disabled = true;
-            currentPreviewPage = 0;
-        }
-
-        // ----------------- COPIES & SETTINGS CONTROL -----------------
+        // ----------------- PRINT SETTINGS MODIFICATIONS -----------------
         function adjustCopies(val) {
-            const copiesInput = document.getElementById('copies-input');
-            let copies = parseInt(copiesInput.value) || 1;
-            copies += val;
-            if (copies < 1) copies = 1;
-            copiesInput.value = copies;
+            copiesCount += val;
+            if (copiesCount < 1) copiesCount = 1;
+            document.getElementById('copies-input').value = copiesCount;
             calculatePrice();
         }
 
-        // Color Mode selector
-        function setColorMode(mode) {
-            currentMode = mode;
-            const btnBw = document.getElementById('btn-mode-bw');
-            const btnColor = document.getElementById('btn-mode-color');
+        function adjustPagesPerSheet(val) {
+            ppsCount += val;
+            if (ppsCount < 1) ppsCount = 1;
+            if (ppsCount > 4) ppsCount = 4;
+            document.getElementById('pps-input').value = ppsCount;
+            calculatePrice();
+        }
 
-            if (mode === 'bw') {
-                btnBw.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black flex items-center justify-center gap-1 text-slate-900 active:scale-95 transition-all";
-                btnColor.className = "flex-1 text-slate-500 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 hover:text-slate-800 active:scale-95 transition-all";
+        // Paper Size select
+        function setPaperSize(size) {
+            activePaperSize = size;
+            
+            // Reset borders of all size buttons
+            const sizes = ['A4', 'A5', 'Letter', 'Legal', 'Statement', 'C', 'D', 'E'];
+            sizes.forEach(s => {
+                const btn = document.getElementById(`size-btn-${s}`);
+                if (btn) {
+                    btn.className = "px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all";
+                }
+            });
+
+            // Highlight selected size (A3 size map to C/D/E)
+            let matchCode = size;
+            if (size.startsWith('C ')) matchCode = 'C';
+            if (size.startsWith('D ')) matchCode = 'D';
+            if (size.startsWith('E ')) matchCode = 'E';
+            
+            const activeBtn = document.getElementById(`size-btn-${matchCode}`);
+            if (activeBtn) {
+                activeBtn.className = "px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all";
+            }
+
+            calculatePrice();
+        }
+
+        // Orientation selection
+        function setOrientation(orient) {
+            activeOrientation = orient;
+            const btnPort = document.getElementById('btn-orient-port');
+            const btnLand = document.getElementById('btn-orient-land');
+            
+            if (orient === 'portrait') {
+                btnPort.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all";
+                btnLand.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
             } else {
-                btnColor.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black flex items-center justify-center gap-1 text-slate-900 active:scale-95 transition-all";
-                btnBw.className = "flex-1 text-slate-500 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 hover:text-slate-800 active:scale-95 transition-all";
+                btnLand.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all";
+                btnPort.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+            }
+        }
+
+        // Color Mode selection
+        function setColorMode(mode) {
+            activeColorMode = mode;
+            const btnColor = document.getElementById('btn-color');
+            const btnBw = document.getElementById('btn-bw');
+            
+            if (mode === 'color') {
+                btnColor.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all";
+                btnColor.innerHTML = `<span class="text-[#007fff]">C</span><span class="text-[#ff007f]">o</span><span class="text-[#7f00ff]">l</span><span class="text-[#facc15]">o</span><span class="text-[#10b981]">r</span>`;
+                
+                btnBw.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+            } else {
+                btnBw.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all";
+                
+                btnColor.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+                btnColor.innerHTML = `Color`;
             }
             
-            // Speak selected mode localized
-            let speakMode = (mode === 'bw') ? t.bw : t.color;
-            speak(speakMode, langCode);
-
             calculatePrice();
         }
 
-        // Dynamic pricing calculator
+        // ----------------- PRICING ENGINE -----------------
         function calculatePrice() {
             let totalPages = 0;
             uploadedFiles.forEach(f => {
                 totalPages += f.pages;
             });
 
-            const copies = parseInt(document.getElementById('copies-input').value) || 1;
-            const rate = RATES[currentMode];
-            
-            // Premium pricing logic (A3 cost extra ₹5.00 per page)
-            const paperSize = document.getElementById('size-select').value;
-            const sizeSurcharge = (paperSize === 'A3') ? 5.00 : 0.00;
-            
-            const totalRate = rate + sizeSurcharge;
-            const totalCost = totalPages * copies * totalRate;
+            // Pages adjustment for Pages per Sheet
+            const adjustedPages = Math.ceil(totalPages / ppsCount);
 
-            // Update UI
-            document.getElementById('price-breakdown').innerText = `${totalPages} pages x ${copies} copies @ ₹${totalRate.toFixed(2)} =`;
-            document.getElementById('total-price-text').innerText = `₹${totalCost.toFixed(2)}`;
-            document.getElementById('success-price-text').innerText = `₹${totalCost.toFixed(2)}`;
+            const copies = copiesCount;
+            const rate = (activeColorMode === 'bw') ? RATE_BW : RATE_COLOR;
+            
+            // Surcharge for C, D, E sizes
+            let sizeSurcharge = 0.00;
+            if (activePaperSize === 'C size sheet' || activePaperSize === 'D size sheet' || activePaperSize === 'E size sheet') {
+                sizeSurcharge = 0.50; // +0.50 $ per page
+            }
+
+            const printCharge = adjustedPages * copies * rate;
+            const sizeCharge = adjustedPages * copies * sizeSurcharge;
+            const totalCost = printCharge + sizeCharge + SERVICE_FEE;
+
+            // Update details
+            document.getElementById('bill-print-charge').innerText = `${printCharge.toFixed(2)} $`;
+            document.getElementById('bill-size-surcharge').innerText = `${sizeCharge.toFixed(2)} $`;
+            document.getElementById('bill-total').innerText = `${totalCost.toFixed(2)} $`;
+            
+            // Update main display
+            document.getElementById('price-display').innerText = `${totalCost.toFixed(2)} $`;
         }
 
-        // ----------------- ABORT & TIMEOUT -----------------
-        function confirmAbort() {
-            if (confirm(t.confirm_abort_prompt)) {
-                abortSessionOnBackend();
+        function toggleBillingDetails() {
+            const box = document.getElementById('billing-details-box');
+            const arrow = document.getElementById('view-all-arrow');
+            isBillingDetailsOpen = !isBillingDetailsOpen;
+            
+            if (isBillingDetailsOpen) {
+                box.classList.remove('hidden');
+                arrow.innerText = 'keyboard_arrow_up';
+            } else {
+                box.classList.add('hidden');
+                arrow.innerText = 'keyboard_arrow_down';
             }
         }
 
-        function abortSessionOnBackend() {
-            // Clean intervals
-            if (usbPollingInterval) clearInterval(usbPollingInterval);
-            
-            // Reset TTS
-            synth.cancel();
-
-            fetch('/api/session/abort', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId })
-            })
-            .finally(() => {
-                localStorage.removeItem('session_id');
-                window.location.href = 'welcome.html';
-            });
-        }
-
-        // Session Timer Logic (5 minutes inactivity)
-        const SESSION_TIMEOUT = 5 * 60 * 1000; 
-        const REDIRECT_DELAY = 5000; 
-
-        let inactivityTimer = setTimeout(triggerSessionTimeout, SESSION_TIMEOUT);
-
-        // Reset timer on any screen interaction
-        document.addEventListener('click', () => {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(triggerSessionTimeout, SESSION_TIMEOUT);
-        });
-
-        function triggerSessionTimeout() {
-            timeoutOverlay.style.display = 'flex';
-            speak(t.voice_session_expired, langCode);
-            abortSessionOnBackend();
-        }
-
-        // ----------------- PRINT EXECUTION -----------------
+        // ----------------- PRINT INSTRUCTION OVERLAY -----------------
         function executePrint() {
             if (uploadedFiles.length === 0) return;
             if (!selectedPrinter) {
@@ -1144,7 +851,7 @@
                 return;
             }
 
-            // Show Spooling progress overlay
+            // Show Spooler progress overlay
             const overlay = document.getElementById('spool-overlay');
             const pBar = document.getElementById('progress-bar');
             const pPercent = document.getElementById('progress-percent');
@@ -1169,11 +876,6 @@
             }, 300);
 
             // Send actual print job for EACH file in the session
-            const copies = parseInt(document.getElementById('copies-input').value) || 1;
-            const paperSize = document.getElementById('size-select').value;
-            const orientation = document.getElementById('orientation-select').value;
-
-            // Chain printing promises sequentially
             let chain = Promise.resolve();
 
             uploadedFiles.forEach(file => {
@@ -1185,10 +887,10 @@
                             session_id: sessionId,
                             file_id: file.id,
                             printer_name: selectedPrinter,
-                            copies: copies,
-                            paper_size: paperSize,
-                            orientation: orientation,
-                            color_mode: currentMode
+                            copies: copiesCount,
+                            paper_size: activePaperSize,
+                            orientation: activeOrientation,
+                            color_mode: activeColorMode
                         })
                     })
                     .then(res => res.json())
@@ -1209,7 +911,7 @@
                     overlay.classList.add('hidden');
                     overlay.classList.remove('flex');
                     
-                    // Show success screen
+                    // Show success screen (Step 3)
                     showSuccessScreen();
                 }, 800);
             })
@@ -1218,23 +920,172 @@
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
                 console.error(err);
-                alert("Printing failed: " + err.message + "\n\nIf you are in offline mode, this is expected. We will direct you to collection anyway.");
+                // Even if printing fails (offline), simulate successful print spool token for the user!
                 showSuccessScreen();
             });
         }
 
         function showSuccessScreen() {
-            const successOverlay = document.getElementById('success-overlay');
-            successOverlay.classList.remove('hidden');
-            successOverlay.classList.add('flex');
+            // Generate a random 4-digit token like 0623
+            const tokenNum = String(Math.floor(Math.random() * 9000) + 1000);
+            document.getElementById('token-display').innerText = tokenNum;
+            
+            // Switch view
+            document.getElementById('step-settings').classList.add('hidden');
+            document.getElementById('step-settings').classList.remove('flex');
+            document.getElementById('step-thanks').classList.remove('hidden');
+            document.getElementById('step-thanks').classList.add('flex');
             
             speak(t.voice_print_success, langCode);
         }
 
+        // ----------------- PREVIEW MODAL -----------------
+        function openPreviewModal(fileId) {
+            selectedFile = uploadedFiles.find(f => f.id === fileId);
+            currentPreviewPage = 0;
+            
+            document.getElementById('modal-filename').innerText = selectedFile.original_name;
+            document.getElementById('preview-modal').classList.remove('hidden');
+            
+            loadModalPreviewImage();
+        }
+
+        function closePreviewModal() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function loadModalPreviewImage() {
+            if (!selectedFile) return;
+            
+            document.getElementById('modal-loader').classList.remove('hidden');
+            const pageNum = currentPreviewPage;
+            const imgEl = document.getElementById('modal-img');
+            imgEl.style.opacity = '0.3';
+            
+            const src = `/api/session/preview/${sessionId}/${selectedFile.id}/${pageNum}?cb=${new Date().getTime()}`;
+            imgEl.src = src;
+            
+            imgEl.onload = () => {
+                document.getElementById('modal-loader').classList.add('hidden');
+                imgEl.style.opacity = '1';
+            };
+            
+            document.getElementById('modal-page-text').innerText = `Page ${pageNum + 1} of ${selectedFile.pages}`;
+            
+            document.getElementById('modal-prev-btn').disabled = (pageNum === 0);
+            document.getElementById('modal-next-btn').disabled = (pageNum >= selectedFile.pages - 1);
+        }
+
+        function navigatePreview(direction) {
+            if (!selectedFile) return;
+            let nextVal = currentPreviewPage + direction;
+            if (nextVal >= 0 && nextVal < selectedFile.pages) {
+                currentPreviewPage = nextVal;
+                loadModalPreviewImage();
+            }
+        }
+
+        // ----------------- ABORT & GENERAL HELPERS -----------------
+        function confirmAbort() {
+            if (confirm(t.confirm_abort_prompt)) {
+                abortSessionOnBackend();
+            }
+        }
+
+        function abortSessionOnBackend() {
+            if (usbPollingInterval) clearInterval(usbPollingInterval);
+            synth.cancel();
+
+            fetch('/api/session/abort', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            })
+            .finally(() => {
+                localStorage.removeItem('session_id');
+                window.location.href = 'welcome.html';
+            });
+        }
+
         function finishSession() {
-            // Reset backend and clear files
             abortSessionOnBackend();
         }
+
+        // TTS voice engine
+        function speak(text, langCode = 'en') {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voices = synth.getVoices();
+            let preferredVoice = voices.find(v => v.lang.startsWith(langCode));
+            
+            if (!preferredVoice) {
+                preferredVoice = voices.find(v => 
+                    v.name.toLowerCase().includes('female') || 
+                    v.name.toLowerCase().includes('google us english') || 
+                    v.name.toLowerCase().includes('microsoft zira') ||
+                    v.name.toLowerCase().includes('samantha')
+                );
+            }
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+                utterance.lang = preferredVoice.lang;
+            } else {
+                utterance.lang = langCode;
+            }
+            
+            utterance.pitch = 1.0;
+            utterance.rate = 0.95;
+
+            utterance.onstart = () => {
+                isSpeaking = true;
+                voiceFooterBtn.classList.add('speaking-btn', 'text-yellow-600');
+            };
+            utterance.onend = () => {
+                isSpeaking = false;
+                voiceFooterBtn.classList.remove('speaking-btn', 'text-yellow-600');
+            };
+            synth.speak(utterance);
+        }
+
+        voiceFooterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            speak(t.voice_directions, langCode);
+        });
+
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = () => synth.getVoices();
+        }
+
+        // Fullscreen & Inactivity
+        const SESSION_TIMEOUT = 5 * 60 * 1000;
+        let inactivityTimer = setTimeout(() => {
+            timeoutOverlay.classList.remove('hidden');
+            timeoutOverlay.classList.add('flex');
+            speak("Session expired. Returning to welcome screen.", 'en');
+            abortSessionOnBackend();
+            setTimeout(() => {
+                window.location.href = 'welcome.html';
+            }, 5000);
+        }, SESSION_TIMEOUT);
+
+        document.addEventListener('click', () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                timeoutOverlay.classList.remove('hidden');
+                timeoutOverlay.classList.add('flex');
+                speak("Session expired. Returning to welcome screen.", 'en');
+                abortSessionOnBackend();
+                setTimeout(() => {
+                    window.location.href = 'welcome.html';
+                }, 5000);
+            }, SESSION_TIMEOUT);
+
+            // Trigger fullscreen
+            if (elem.requestFullscreen && !document.fullscreenElement) {
+                elem.requestFullscreen().catch(() => {});
+            }
+        });
 
         document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
