@@ -8,12 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c:wght@400;700;900&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
         :root {
-            --font-main: 'SN Pro', sans-serif;
-            --font-title: 'Capriola', sans-serif;
+            --font-main: 'Google Sans Flex', sans-serif;
+            --font-title: 'Google Sans Flex', sans-serif;
         }
         body {
             font-family: var(--font-main);
@@ -498,12 +498,12 @@
                 document.getElementById('device-graphic-wrapper').onclick = triggerFileSelect;
             } else if (source === 'usb') {
                 badge.innerText = t.usb;
-                graphic.src = "/templates/usb_stick.png";
+                graphic.src = "/templates/image%208-1.png";
                 instr.innerText = t.usb_instruction;
                 startUSBPolling();
             } else if (source === 'type-c') {
                 badge.innerText = t.typec;
-                graphic.src = "/templates/type_c_cable.png";
+                graphic.src = "/templates/image%209-1.png";
                 instr.innerText = t.typec_instruction;
                 // Add click cable to simulate mobile files
                 document.getElementById('device-graphic-wrapper').style.cursor = 'pointer';
