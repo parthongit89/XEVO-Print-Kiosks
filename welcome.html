@@ -23,19 +23,28 @@
             -webkit-user-drag: none;
         }
 
-        body, html {
-            height: 100%;
-            width: 100%;
+        body {
+            height: 100vh;
+            width: 100vw;
             overflow: hidden;
             background-color: #ffffff;
             font-family: var(--font-main);
             cursor: default;
+            border: 16px solid rgba(241, 245, 249, 0.8);
+            border-radius: 40px;
+            box-sizing: border-box;
+        }
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
         }
 
         .container {
             position: relative;
             width: 100%;
-            height: 100vh;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
