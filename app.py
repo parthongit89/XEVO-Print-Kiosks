@@ -650,6 +650,97 @@ def print_document():
     finally:
         win32print.ClosePrinter(hprinter)
 
+@app.route('/api/session/compile_pdf', methods=['POST'])
+def compile_pdf():
+    data = request.json or {}
+    session_id = data.get('session_id')
+    files_settings = data.get('files', [])
+    
+    if not session_id or not files_settings:
+        return jsonify({"success": False, "error": "Missing parameters"})
+        
+    session_path = os.path.join(SESSION_DIR, f"session_{session_id}")
+    if not os.path.exists(session_path):
+        return jsonify({"success": False, "error": "Session not found"})
+        
+    import random
+    token = f"{random.randint(1000, 9999)}"
+    
+    try:
+        compiled_doc = fitz.open()
+        
+        for fs in files_settings:
+            file_id = fs.get('id')
+            copies = int(fs.get('copies', 1))
+            color_mode = fs.get('color_mode', 'color')
+            
+            pattern = os.path.join(session_path, f"{file_id}.*")
+            matches = glob.glob(pattern)
+            if not matches:
+                continue
+            filepath = matches[0]
+            ext = os.path.splitext(filepath)[1].lower()
+            
+            if ext == '.pdf':
+                src_doc = fitz.open(filepath)
+                for _ in range(copies):
+                    for page_num in range(src_doc.page_count):
+                        page = src_doc[page_num]
+                        if color_mode == 'bw':
+                            pix = page.get_pixmap(colorspace=fitz.csGRAY, dpi=150)
+                            img_data = pix.tobytes("png")
+                            new_page = compiled_doc.new_page(width=page.rect.width, height=page.rect.height)
+                            new_page.insert_image(new_page.rect, stream=img_data)
+                        else:
+                            compiled_doc.insert_pdf(src_doc, from_page=page_num, to_page=page_num)
+                src_doc.close()
+            else:
+                img_doc = fitz.open()
+                img_page = img_doc.new_page()
+                if color_mode == 'bw':
+                    img = Image.open(filepath)
+                    img = img.convert('L')
+                    import io
+                    img_byte_arr = io.BytesIO()
+                    img.save(img_byte_arr, format='JPEG')
+                    img_data = img_byte_arr.getvalue()
+                    img_page.insert_image(img_page.rect, stream=img_data)
+                else:
+                    img_page.insert_image(img_page.rect, filename=filepath)
+                
+                for _ in range(copies):
+                    compiled_doc.insert_pdf(img_doc)
+                img_doc.close()
+                
+        output_filename = "locked_print.pdf"
+        output_path = os.path.join(session_path, output_filename)
+        
+        compiled_doc.save(
+            output_path,
+            encryption=fitz.PDF_ENCRYPT_AES_256,
+            user_pw=token,
+            owner_pw="xevo_owner"
+        )
+        compiled_doc.close()
+        
+        return jsonify({
+            "success": True,
+            "token": token,
+            "download_url": f"/api/session/download_locked_pdf/{session_id}"
+        })
+    except Exception as e:
+        print("Compile PDF error:", e)
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route('/api/session/download_locked_pdf/<session_id>', methods=['GET'])
+def download_locked_pdf(session_id):
+    session_path = os.path.join(SESSION_DIR, f"session_{session_id}")
+    output_path = os.path.join(session_path, "locked_print.pdf")
+    if os.path.exists(output_path):
+        return send_file(output_path, as_attachment=True, download_name="locked_print.pdf")
+    else:
+        return "File not found", 404
+
 @app.route('/api/speak', methods=['GET'])
 def speak_text():
     from gtts import gTTS
