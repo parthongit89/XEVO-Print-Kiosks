@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>E-PRINT - Kiosk Process</title>
+    <!-- Tailwind and Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --font-main: 'Google Sans Flex', sans-serif;
+            --font-title: 'Google Sans Flex', sans-serif;
+        }
+        body {
+            font-family: var(--font-main);
+            user-select: none;
+            -webkit-user-drag: none;
+            background-color: #ffffff;
+            cursor: default;
+        }
+        .speaking-btn {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col p-8 overflow-hidden select-none bg-white border-[16px] border-slate-100/80 rounded-[40px]">
+
+    <!-- Top Bar Header -->
+    <header class="flex justify-between items-center w-full mb-8">
+        <!-- Controls Box -->
+        <div class="flex items-center gap-2 border border-slate-200 rounded-2xl p-2 bg-white shadow-sm">
+            <!-- Close Button / Abort -->
+            <button onclick="confirmAbort()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Abort Session">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+            <!-- Audio Toggle Button -->
+            <button id="voiceBtn" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Listen instructions">
+                <span class="material-symbols-outlined text-xl">volume_up</span>
+            </button>
+            <!-- Contrast/Theme Toggle Button -->
+            <button onclick="alert('Touchscreen brightness set to maximum kiosk grade.')" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Toggle Theme">
+                <span class="material-symbols-outlined text-xl">light_mode</span>
+            </button>
+            <!-- Refresh Button -->
+            <button onclick="window.location.reload()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Refresh">
+                <span class="material-symbols-outlined text-xl">autorenew</span>
+            </button>
+            
+            <!-- Date Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[110px] text-center" id="date-box">
+                -- -- --
+            </div>
+            <!-- Time Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[130px] text-center" id="time-box">
+                -- : -- : -- --
+            </div>
+        </div>
+
+        <!-- Top Badge (Google Drive / USB / TYPE-C) -->
+        <div class="border border-slate-200 px-6 py-2 rounded-2xl bg-white shadow-sm flex items-center justify-center font-extrabold text-slate-700 min-w-[120px]" id="source-badge">
+            --
+        </div>
+
+        <!-- Right Colored Dots -->
+        <div class="flex gap-2">
+            <div class="w-4 h-4 rounded-full bg-[#ff007f]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#7f00ff]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#007fff]"></div>
+        </div>
+    </header>
+
+    <!-- STEP 1: UPLOAD / DEVICE CONNECTION VIEW -->
+    <div id="step-upload" class="flex-grow flex p-2 gap-10 max-w-7xl w-full mx-auto overflow-hidden">
+        
+        <!-- Left Column: Device Graphic / Instruction Card + Action Buttons -->
+        <div class="w-[38%] flex flex-col gap-6 h-full overflow-hidden">
+            <!-- Connection Card -->
+            <div class="flex-grow bg-white border border-slate-200 rounded-[20px] p-8 flex flex-col items-center justify-center shadow-sm text-center relative">
+                <!-- Dynamic Image based on source -->
+                <div class="w-72 h-72 flex items-center justify-center mb-6" id="device-graphic-wrapper">
+                    <img id="device-graphic" src="" class="max-w-full max-h-full object-contain" alt="Device"/>
+                </div>
+
+                <!-- Instruction Text -->
+                <p class="text-base text-slate-800 leading-relaxed font-sans max-w-xs" id="device-instruction">
+                    --
+                </p>
+
+                <!-- Hidden File Input for local file picker simulation -->
+                <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.png,.jpg,.jpeg"/>
+            </div>
+
+            <!-- Bottom Action Row under connection card -->
+            <div class="flex gap-4">
+                <!-- Refresh Button -->
+                <button onclick="window.location.reload()" class="flex-1 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-lg">autorenew</span>
+                    <span>Refresh</span>
+                </button>
+                <!-- Print Button -->
+                <button onclick="goToSettingsStep()" id="next-to-settings-btn" disabled class="flex-1 py-4 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-not-allowed">
+                    <span class="material-symbols-outlined text-lg">local_printshop</span>
+                    <span>Print</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Column: Document List Stack -->
+        <div class="w-[58%] flex flex-col h-full overflow-y-auto pr-2 gap-4" id="files-list-container">
+            <!-- Header Card -->
+            <div class="bg-white border border-slate-200 rounded-xl px-6 py-4 flex items-center justify-between shadow-sm">
+                <span class="text-sm font-extrabold text-slate-800 tracking-tight" id="all-files-title">All files appear here</span>
+                <span class="material-symbols-outlined text-slate-400 text-lg cursor-pointer" onclick="confirmAbort()">close</span>
+            </div>
+
+            <!-- Empty State Placeholder -->
+            <div id="empty-files-state" class="flex-grow bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2 py-16 shadow-sm">
+                <span class="material-symbols-outlined text-4xl text-slate-300">folder</span>
+                <p class="text-sm font-bold text-slate-400">No files uploaded yet</p>
+                <button onclick="triggerFileSelect()" class="mt-4 px-6 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs shadow-sm transition-all active:scale-95 cursor-pointer">
+                    Simulate Upload
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- STEP 2: PRINT CONFIGURATION & COST VIEW -->
+    <div id="step-settings" class="flex-grow flex-col justify-between max-w-4xl w-full mx-auto overflow-hidden hidden">
+        
+        <!-- Files selected pill row -->
+        <div class="flex flex-wrap gap-3 mb-6 max-h-24 overflow-y-auto p-1" id="selected-files-pills">
+            <!-- Dynamic pills loaded here -->
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex-grow flex flex-col justify-between overflow-y-auto mb-6">
+            
+            <div class="flex flex-col gap-6">
+                <!-- 1. Number of copies -->
+                <div class="flex flex-col mb-2">
+                    <label class="text-base font-extrabold text-slate-800 mb-2">Number of copies</label>
+                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-white w-full max-w-xl h-14 shadow-sm">
+                        <button onclick="adjustCopies(1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">+</button>
+                        <input type="number" id="copies-input" value="1" min="1" class="w-full bg-transparent border-0 text-center font-black text-lg p-0 focus:ring-0 text-slate-800" readonly/>
+                        <button onclick="adjustCopies(-1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">-</button>
+                    </div>
+                </div>
+
+                <!-- 2. Paper per Sheet -->
+                <div class="flex flex-col mb-2">
+                    <label class="text-base font-extrabold text-slate-800 mb-2">Paper per Sheet</label>
+                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-white w-full max-w-xl h-14 shadow-sm">
+                        <button onclick="adjustPagesPerSheet(1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">+</button>
+                        <input type="number" id="pps-input" value="1" min="1" max="4" class="w-full bg-transparent border-0 text-center font-black text-lg p-0 focus:ring-0 text-slate-800" readonly/>
+                        <button onclick="adjustPagesPerSheet(-1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">-</button>
+                    </div>
+                </div>
+
+                <!-- 3. Paper Size -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-base font-extrabold text-slate-800">Paper Size</label>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="setPaperSize('A4')" id="size-btn-A4" class="px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all cursor-pointer">A4</button>
+                            <button onclick="setPaperSize('A5')" id="size-btn-A5" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">A5</button>
+                            <button onclick="setPaperSize('Letter')" id="size-btn-Letter" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">Letter</button>
+                            <button onclick="setPaperSize('Legal')" id="size-btn-Legal" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">Legal</button>
+                            <button onclick="setPaperSize('Statement')" id="size-btn-Statement" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">Statement</button>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="setPaperSize('C size sheet')" id="size-btn-C" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">C size sheet</button>
+                            <button onclick="setPaperSize('D size sheet')" id="size-btn-D" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">D size sheet</button>
+                            <button onclick="setPaperSize('E size sheet')" id="size-btn-E" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">E size sheet</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Layout -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-base font-extrabold text-slate-800">Layout</label>
+                    <div class="flex items-center gap-10">
+                        <!-- Portrait / Landscape -->
+                        <div class="flex border border-slate-200 bg-white p-1 rounded-xl w-64 h-12 shadow-sm">
+                            <button onclick="setOrientation('portrait')" id="btn-orient-port" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all cursor-pointer">Portrait</button>
+                            <button onclick="setOrientation('landscape')" id="btn-orient-land" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all cursor-pointer">Landscape</button>
+                        </div>
+
+                        <!-- Color / B&W -->
+                        <div class="flex border border-slate-200 bg-white p-1 rounded-xl w-64 h-12 shadow-sm">
+                            <button onclick="setColorMode('color')" id="btn-color" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all cursor-pointer">
+                                <span class="text-[#007fff]">C</span><span class="text-[#ff007f]">o</span><span class="text-[#7f00ff]">l</span><span class="text-[#facc15]">o</span><span class="text-[#10b981]">r</span>
+                            </button>
+                            <button onclick="setColorMode('bw')" id="btn-bw" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all cursor-pointer">B&W</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden">
+                    <select id="printer-select"><option value="Default">Default</option></select>
+                </div>
+            </div>
+
+            <!-- Bottom cost & checkout segment -->
+            <div class="mt-8 border-t border-slate-100 pt-6">
+                <!-- Dropdown Billing details box -->
+                <div id="billing-details-box" class="hidden w-full max-w-xl mx-auto border-[4px] border-slate-200 rounded-2xl p-6 bg-white mb-6">
+                    <div class="flex flex-col gap-3 font-semibold text-sm text-slate-600">
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
+                            <span>Print Charge</span>
+                            <span id="bill-print-charge">0.00 $</span>
+                        </div>
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
+                            <span>Custom Print Charge</span>
+                            <span>0.00 $</span>
+                        </div>
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
+                            <span>Size</span>
+                            <span id="bill-size-surcharge">0.00 $</span>
+                        </div>
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
+                            <span>Service</span>
+                            <span>0.20 $</span>
+                        </div>
+                        <div class="pt-2 flex justify-between font-black text-lg text-slate-900">
+                            <span>Total</span>
+                            <span id="bill-total">0.20 $</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Action Row -->
+                <div class="flex justify-between items-center w-full max-w-4xl mx-auto">
+                    <!-- Left Action Button: Refresh -->
+                    <button onclick="window.location.reload()" class="w-48 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">autorenew</span>
+                        <span>Refresh</span>
+                    </button>
+
+                    <!-- Center Price Display -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-5xl font-black text-slate-900 tracking-tight" id="price-display">0.20 $</span>
+                        <button onclick="toggleBillingDetails()" class="mt-2 text-slate-500 hover:text-slate-800 font-extrabold text-sm flex items-center gap-1 active:scale-95 transition-all cursor-pointer">
+                            <span>View all</span>
+                            <span class="material-symbols-outlined text-lg" id="view-all-arrow">keyboard_arrow_down</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Action Button: Print -->
+                    <button onclick="executePrint()" class="w-48 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">local_printshop</span>
+                        <span>Print</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- STEP 3: THANK YOU / SUCCESS VIEW -->
+    <div id="step-thanks" class="flex-grow flex flex-col items-center justify-center text-center p-8 hidden">
+        <div class="max-w-2xl flex flex-col items-center">
+            <!-- Main instruction title matching mockup exactly -->
+            <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-snug mb-16 max-w-2xl">
+                Provide the Token Number to Cash Counter and get your print's
+            </h1>
+
+            <!-- Large Token Display -->
+            <div class="text-7xl md:text-8xl font-black text-slate-400 tracking-wider mb-20 select-text" id="token-display">
+                0000
+            </div>
+
+            <!-- Bottom circles -->
+            <div class="flex gap-2 mb-12">
+                <div class="w-4 h-4 rounded-full bg-[#ff007f]"></div>
+                <div class="w-4 h-4 rounded-full bg-[#7f00ff]"></div>
+                <div class="w-4 h-4 rounded-full bg-[#007fff]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIO FOOTER & ASSISTANCE -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-8 mt-auto shadow-sm -mx-8 -mb-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button class="audio-btn w-12 h-12 bg-yellow-300 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all hover:bg-yellow-400" id="voiceFooterBtn">
+                    <svg viewBox="0 0 24 24" class="w-6 h-6 fill-red-500">
+                        <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.01,19.86 21,16.28 21,12C21,7.72 18.01,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.02C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z" />
+                    </svg>
+                </button>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase tracking-widest font-black">Voice Assistant</p>
+                    <p class="text-sm text-slate-600 font-semibold" id="voice-desc-text">Press button to listen to print directions.</p>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400 font-semibold">© 2026 E-PRINT. All Rights Reseverd.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LIVE PREVIEW MODAL -->
+    <div id="preview-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-8">
+        <div class="bg-white rounded-3xl max-w-3xl w-full h-[85vh] flex flex-col p-6 shadow-2xl relative">
+            <button onclick="closePreviewModal()" class="absolute right-6 top-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition-all active:scale-95">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+            
+            <h3 class="text-lg font-black text-slate-800 mb-4 truncate pr-16" id="modal-filename">Preview Document</h3>
+            
+            <div class="flex-grow bg-slate-100 rounded-2xl border border-slate-200 p-4 flex items-center justify-center overflow-hidden relative">
+                <img id="modal-img" class="max-w-full max-h-full rounded-md shadow-md bg-white object-contain" src="" alt="Page Preview"/>
+                <div id="modal-loader" class="absolute inset-0 bg-white/70 flex items-center justify-center hidden">
+                    <span class="material-symbols-outlined text-3xl animate-spin text-purple-600">sync</span>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mt-4">
+                <button onclick="navigatePreview(-1)" id="modal-prev-btn" class="w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+                    <span class="material-symbols-outlined">navigate_before</span>
+                </button>
+                <span id="modal-page-text" class="text-sm font-bold text-slate-600">Page 1 of 1</span>
+                <button onclick="navigatePreview(1)" id="modal-next-btn" class="w-12 h-12 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+                    <span class="material-symbols-outlined">navigate_next</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT SPOOLING PROGRESS OVERLAY -->
+    <div id="spool-overlay" class="fixed inset-0 bg-slate-900/90 z-50 flex-col items-center justify-center text-center p-8 hidden">
+        <div class="max-w-md bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center">
+            <div class="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 mb-6">
+                <span class="material-symbols-outlined text-5xl animate-spin">sync</span>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900" id="progress-title">Spooling print job...</h3>
+            <p class="text-sm text-slate-500 mt-2" id="progress-desc">Please wait while we format and send your document to the printer queue.</p>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-6">
+                <div id="progress-bar" class="w-0 h-full bg-purple-600 rounded-full transition-all duration-300"></div>
+            </div>
+            <span id="progress-percent" class="text-xs font-bold text-purple-600 mt-2">0%</span>
+        </div>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        const voiceFooterBtn = document.getElementById('voiceFooterBtn');
+        const timeoutOverlay = document.getElementById('timeout-overlay');
+        const elem = document.documentElement;
+        
+        let isSpeaking = false;
+
+        // Session Variables
+        const sessionId = localStorage.getItem('session_id') || 'offline_session';
+        const lang = localStorage.getItem('selectedLanguage') || 'English';
+        const source = new URLSearchParams(window.location.search).get('source') || 'gdrive';
+
+        let langCode = 'en';
+        if (lang === 'Hindi') langCode = 'hi';
+        if (lang === 'Marathi') langCode = 'mr';
+
+        // Pricing Rates
+        const RATE_BW = 0.20;      // 0.20 $ per page
+        const RATE_COLOR = 0.50;   // 0.50 $ per page
+        const SERVICE_FEE = 0.20;  // 0.20 $ flat service fee
+
+        // Kiosk State
+        let uploadedFiles = [];
+        let selectedFile = null;
+        let currentPreviewPage = 0;
+        let selectedPrinter = '';
+        
+        // Print Settings State
+        let copiesCount = 1;
+        let ppsCount = 1;
+        let activePaperSize = 'A4';
+        let activeOrientation = 'portrait';
+        let activeColorMode = 'color'; // default color
+        
+        let usbPollingInterval = null;
+        let isBillingDetailsOpen = false;
+
+        // Translations matching Mockups
+        const translations = {
+            'English': {
+                gdrive: "Google Drive",
+                usb: "USB",
+                typec: "TYPE-C",
+                gdrive_instruction: "Scan the QR Google drive camera or camera QR lens to upload documents in folder",
+                usb_instruction: "Make sure the USB attach properly / Insert the USB on system port",
+                typec_instruction: "Make sure the TYPE-C attach properly / Insert the TYPE -C on system port",
+                all_files_title: "All files appear here",
+                voice_directions: "Welcome. Please connect your device or scan the QR code to upload files. Once uploaded, click Print to customize settings.",
+                voice_select_file: "File preview loaded.",
+                voice_print_start: "Spooling print job. Please wait.",
+                voice_print_success: "Please note the token number, pay at the counter and collect your prints.",
+                confirm_abort_prompt: "Are you sure you want to abort the session? All your uploaded files will be permanently deleted."
+            },
+            'Hindi': {
+                gdrive: "गूगल ड्राइव",
+                usb: "यूएसबी",
+                typec: "टाइप-सी",
+                gdrive_instruction: "दस्तावेज़ों को अपलोड करने के लिए क्यूआर गूगल ड्राइव कैमरा या क्यूआर लेंस को स्कैन करें",
+                usb_instruction: "सुनिश्चित करें कि यूएसबी ठीक से जुड़ा हुआ है / सिस्टम पोर्ट पर यूएसबी डालें",
+                typec_instruction: "सुनिश्चित करें कि टाइप-सी ठीक से जुड़ा हुआ है / सिस्टम पोर्ट पर टाइप-सी डालें",
+                all_files_title: "सभी फाइलें यहां दिखाई देंगी",
+                voice_directions: "आपका स्वागत है। दस्तावेज़ अपलोड करने के लिए क्यूआर कोड स्कैन करें या यूएसबी कनेक्ट करें। फ़ाइलें अपलोड होने के बाद प्रिंट दबाएं।",
+                voice_select_file: "फ़ाइल प्रीव्यू लोड हो गया है।",
+                voice_print_start: "प्रिंट प्रक्रिया चल रही है। कृपया प्रतीक्षा करें।",
+                voice_print_success: "कृपया टोकन नंबर नोट करें, काउंटर पर भुगतान करें और प्रतियां एकत्र करें।",
+                confirm_abort_prompt: "क्या आप निश्चित रूप से सत्र रद्द करना चाहते हैं? आपकी सभी अपलोड की गई फ़ाइलें स्थायी रूप से हटा दी जाएंगी।"
+            },
+            'Marathi': {
+                gdrive: "गुगल ड्राईव्ह",
+                usb: "युएसबी",
+                typec: "टाईप-सी",
+                gdrive_instruction: "फोल्डरमध्ये दस्तऐवज अपलोड करण्यासाठी क्यूआर गुगल ड्राईव्ह कॅमेरा किंवा क्यूआर लेन्स स्कॅन करा",
+                usb_instruction: "युएसबी योग्यरित्या कनेक्ट केल्याची खात्री करा / सिस्टीम पोर्टवर युएसबी घाला",
+                typec_instruction: "टाईप-सी योग्यरित्या कनेक्ट केल्याची खात्री करा / सिस्टीम पोर्टवर टाईप-सी घाला",
+                all_files_title: "सर्व फाईल्स येथे दिसतील",
+                voice_directions: "आपले स्वागत आहे. दस्तऐवज अपलोड करण्यासाठी क्यूआर कोड स्कॅन करा किंवा यूएसबी कनेक्ट करा. फाईल्स अपलोड झाल्यानंतर प्रिंट दाबा.",
+                voice_select_file: "फाईल प्रीव्ह्यू लोड झाला आहे.",
+                voice_print_start: "प्रिंट प्रक्रिया सुरू आहे. कृपया प्रतीक्षा करा.",
+                voice_print_success: "कृपया टोकन नंबर लिहून घ्या, काउंटरवर पैसे भरा आणि आपल्या प्रती गोळा करा.",
+                confirm_abort_prompt: "आपण नक्की सत्र रद्द करू इच्छिता? आपल्या सर्व अपलोड केलेल्या फाईल्स कायमच्या डिलीट केल्या जातील।"
+            }
+        };
+
+        const t = translations[lang] || translations['English'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Set source badge and instructions
+            setupSourceUI();
+            
+            // Load printers
+            loadPrinters();
+
+            // Load any existing session files
+            fetchSessionFiles();
+
+            // Setup Google Drive sync polling if source is gdrive
+            if (source === 'gdrive') {
+                startGDriveSyncPolling();
+            }
+
+            // Set Initial Voice instructions
+            setTimeout(() => {
+                speak(t.voice_directions, langCode);
+            }, 800);
+
+            // Register uploader events
+            setupFileUploader();
+        });
+
+        // Clock Update
+        function updateClock() {
+            const now = new Date();
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = String(now.getFullYear()).substring(2);
+            document.getElementById('date-box').innerText = `${day} ${month} ${year}`;
+            
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const strHours = String(hours).padStart(2, '0');
+            document.getElementById('time-box').innerText = `${strHours} : ${minutes} : ${seconds} ${ampm}`;
+        }
+
+        // Setup Source View UI
+        function setupSourceUI() {
+            const badge = document.getElementById('source-badge');
+            const graphic = document.getElementById('device-graphic');
+            const instr = document.getElementById('device-instruction');
+            const allFilesTitle = document.getElementById('all-files-title');
+
+            allFilesTitle.innerText = t.all_files_title;
+
+            if (source === 'gdrive') {
+                badge.innerText = t.gdrive;
+                graphic.src = "templates/Process/QR%20CODE.png";
+                instr.innerText = t.gdrive_instruction;
+                // Click QR Code to trigger file dialog
+                document.getElementById('device-graphic-wrapper').style.cursor = 'pointer';
+                document.getElementById('device-graphic-wrapper').onclick = triggerFileSelect;
+            } else if (source === 'usb') {
+                badge.innerText = t.usb;
+                graphic.src = "templates/Upload%20process/USB.png";
+                instr.innerText = t.usb_instruction;
+                startUSBPolling();
+            } else if (source === 'type-c') {
+                badge.innerText = t.typec;
+                graphic.src = "templates/Upload%20process/TYPEC.png";
+                instr.innerText = t.typec_instruction;
+                // Add click cable to simulate mobile files
+                document.getElementById('device-graphic-wrapper').style.cursor = 'pointer';
+                document.getElementById('device-graphic-wrapper').onclick = triggerFileSelect;
+            }
+        }
+
+        function triggerFileSelect() {
+            document.getElementById('file-input').click();
+        }
+
+        // ----------------- PRINTER ENUMERATION -----------------
+        function loadPrinters() {
+            fetch('/api/printers')
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.getElementById('printer-select');
+                    select.innerHTML = '';
+                    if (data.success && data.printers.length > 0) {
+                        data.printers.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = p;
+                            opt.innerText = p;
+                            if (p === data.default) {
+                                opt.selected = true;
+                                selectedPrinter = p;
+                            }
+                            select.appendChild(opt);
+                        });
+                        if (!selectedPrinter) selectedPrinter = data.printers[0];
+                    } else {
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.innerText = "No printers found";
+                        select.appendChild(opt);
+                    }
+                })
+                .catch(err => {
+                    console.error("Printers fetch error:", err);
+                    const select = document.getElementById('printer-select');
+                    select.innerHTML = '<option value="Microsoft Print to PDF">Microsoft Print to PDF (Offline)</option>';
+                    selectedPrinter = "Microsoft Print to PDF";
+                });
+            
+            document.getElementById('printer-select').addEventListener('change', (e) => {
+                selectedPrinter = e.target.value;
+            });
+        }
+
+        // ----------------- USB POLLING -----------------
+        function startUSBPolling() {
+            scanUSB();
+            usbPollingInterval = setInterval(scanUSB, 5000);
+        }
+
+                function scanUSB() {
+            fetch('/api/usb/detect')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.detected && data.files.length > 0) {
+                        const unimported = data.files.filter(uf => !uploadedFiles.some(f => f.original_name === uf.name));
+                        if (unimported.length > 0) {
+                            importUSBFile(unimported[0].path);
+                        }
+                    }
+                })
+                .catch(err => console.error("USB scan error:", err));
+        }
+
+        function importUSBFile(filePath) {
+            fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    source_path: filePath
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    uploadedFiles = [...uploadedFiles, ...data.files];
+                    renderFilesList();
+                }
+            })
+            .catch(err => console.error("USB Import error:", err));
+        }
+
+        // Render files list on right side
+        function renderFilesList() {
+            const container = document.getElementById('files-list-container');
+            container.innerHTML = `
+                <!-- Header Card -->
+                <div class="bg-white border border-slate-200 rounded-xl px-6 py-4 flex items-center justify-between shadow-sm">
+                    <span class="text-sm font-extrabold text-slate-800 tracking-tight" id="all-files-title">All files appear here</span>
+                    <span class="material-symbols-outlined text-slate-400 text-lg cursor-pointer" onclick="confirmAbort()">close</span>
+                </div>
+            `;
+
+            if (uploadedFiles.length === 0) {
+                const emptyCard = document.createElement('div');
+                emptyCard.id = "empty-files-state";
+                emptyCard.className = "flex-grow bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2 py-16 shadow-sm";
+                emptyCard.innerHTML = `
+                    <span class="material-symbols-outlined text-4xl text-slate-300">folder</span>
+                    <p class="text-sm font-bold text-slate-400">No files uploaded yet</p>
+                    <button onclick="triggerFileSelect()" class="mt-4 px-6 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs shadow-sm transition-all active:scale-95 cursor-pointer">
+                        Simulate Upload
+                    </button>
+                `;
+                container.appendChild(emptyCard);
+                
+                // Disable print button
+                const printBtn = document.getElementById('next-to-settings-btn');
+                printBtn.disabled = true;
+                printBtn.className = "flex-1 py-4 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-not-allowed";
+                return;
+            }
+
+            // Enable Print (next) button
+            const printBtn = document.getElementById('next-to-settings-btn');
+            printBtn.disabled = false;
+            printBtn.className = "flex-1 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer";
+
+            uploadedFiles.forEach(file => {
+                const fileCard = document.createElement('div');
+                fileCard.className = "bg-white border border-slate-200 rounded-xl px-6 py-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all";
+                fileCard.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <span class="material-symbols-outlined text-slate-400">draft</span>
+                        <div class="overflow-hidden">
+                            <p class="text-sm font-bold text-slate-800 truncate max-w-[280px]" title="${file.original_name}">${file.original_name}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <!-- Preview Button -->
+                        <button onclick="openPreviewModal('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-lg">visibility</span>
+                        </button>
+                        <!-- Delete Button -->
+                        <button onclick="removeUploadedFile('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(fileCard);
+            });
+
+            calculatePrice();
+        }
+
+        function removeUploadedFile(fileId) {
+            // Delete file physically from backend session
+            fetch('/api/session/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    file_id: fileId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+                    renderFilesList();
+                }
+            })
+            .catch(err => console.error("Error deleting file:", err));
+        }
+
+        function fetchSessionFiles() {
+            fetch(`/api/session/files/${sessionId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.files) {
+                        uploadedFiles = data.files;
+                        renderFilesList();
+                    }
+                })
+                .catch(err => console.error("Error fetching session files:", err));
+        }
+
+        let gdrivePollingInterval = null;
+        function startGDriveSyncPolling() {
+            syncGDriveFiles();
+            gdrivePollingInterval = setInterval(syncGDriveFiles, 5000);
+        }
+
+        function syncGDriveFiles() {
+            const folderUrl = "https://drive.google.com/drive/folders/1kSqN8BkHZUUVcH3XRMRZCzpM5pWLNx_J?usp=drive_link";
+            fetch('/api/session/gdrive_sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    folder_url: folderUrl
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.files) {
+                    uploadedFiles = data.files;
+                    renderFilesList();
+                }
+            })
+            .catch(err => console.error("Google Drive sync error:", err));
+        }
+
+        // ----------------- FLOW STEP TRANSITIONS -----------------
+        function goToSettingsStep() {
+            if (uploadedFiles.length === 0) return;
+            
+            // Render selected file pills at the top of settings page
+            renderFilePills();
+            
+            // Toggle Views
+            document.getElementById('step-upload').classList.add('hidden');
+            document.getElementById('step-settings').classList.remove('hidden');
+            document.getElementById('step-settings').classList.add('flex');
+            
+            calculatePrice();
+        }
+
+        function goToUploadStep() {
+            document.getElementById('step-settings').classList.add('hidden');
+            document.getElementById('step-settings').classList.remove('flex');
+            document.getElementById('step-upload').classList.remove('hidden');
+        }
+
+        // Selected file pills row
+        function renderFilePills() {
+            const container = document.getElementById('selected-files-pills');
+            container.innerHTML = '';
+            
+            uploadedFiles.forEach(file => {
+                const pill = document.createElement('div');
+                pill.className = "flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 shadow-sm";
+                pill.innerHTML = `
+                    <span class="truncate max-w-[140px]">${file.original_name}</span>
+                    <button onclick="removeUploadedFile('${file.id}'); renderFilePills(); calculatePrice(); checkSettingsPillsEmpty();" class="text-slate-400 hover:text-red-500 flex items-center">
+                        <span class="material-symbols-outlined text-sm font-bold">close</span>
+                    </button>
+                `;
+                container.appendChild(pill);
+            });
+        }
+
+        function checkSettingsPillsEmpty() {
+            if (uploadedFiles.length === 0) {
+                goToUploadStep();
+            }
+        }
+
+        // ----------------- PRINT SETTINGS MODIFICATIONS -----------------
+        function adjustCopies(val) {
+            copiesCount += val;
+            if (copiesCount < 1) copiesCount = 1;
+            document.getElementById('copies-input').value = copiesCount;
+            calculatePrice();
+        }
+
+        function adjustPagesPerSheet(val) {
+            ppsCount += val;
+            if (ppsCount < 1) ppsCount = 1;
+            if (ppsCount > 4) ppsCount = 4;
+            document.getElementById('pps-input').value = ppsCount;
+            calculatePrice();
+        }
+
+        // Paper Size select
+        function setPaperSize(size) {
+            activePaperSize = size;
+            
+            // Reset borders of all size buttons
+            const sizes = ['A4', 'A5', 'Letter', 'Legal', 'Statement', 'C', 'D', 'E'];
+            sizes.forEach(s => {
+                const btn = document.getElementById(`size-btn-${s}`);
+                if (btn) {
+                    btn.className = "px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all";
+                }
+            });
+
+            // Highlight selected size (A3 size map to C/D/E)
+            let matchCode = size;
+            if (size.startsWith('C ')) matchCode = 'C';
+            if (size.startsWith('D ')) matchCode = 'D';
+            if (size.startsWith('E ')) matchCode = 'E';
+            
+            const activeBtn = document.getElementById(`size-btn-${matchCode}`);
+            if (activeBtn) {
+                activeBtn.className = "px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all";
+            }
+
+            calculatePrice();
+        }
+
+        // Orientation selection
+        function setOrientation(orient) {
+            activeOrientation = orient;
+            const btnPort = document.getElementById('btn-orient-port');
+            const btnLand = document.getElementById('btn-orient-land');
+            
+            if (orient === 'portrait') {
+                btnPort.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all";
+                btnLand.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+            } else {
+                btnLand.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all";
+                btnPort.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+            }
+        }
+
+        // Color Mode selection
+        function setColorMode(mode) {
+            activeColorMode = mode;
+            const btnColor = document.getElementById('btn-color');
+            const btnBw = document.getElementById('btn-bw');
+            
+            if (mode === 'color') {
+                btnColor.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all";
+                btnColor.innerHTML = `<span class="text-[#007fff]">C</span><span class="text-[#ff007f]">o</span><span class="text-[#7f00ff]">l</span><span class="text-[#facc15]">o</span><span class="text-[#10b981]">r</span>`;
+                
+                btnBw.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+            } else {
+                btnBw.className = "flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all";
+                
+                btnColor.className = "flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all";
+                btnColor.innerHTML = `Color`;
+            }
+            
+            calculatePrice();
+        }
+
+        // ----------------- PRICING ENGINE -----------------
+        function calculatePrice() {
+            let totalPages = 0;
+            uploadedFiles.forEach(f => {
+                totalPages += f.pages;
+            });
+
+            // Pages adjustment for Pages per Sheet
+            const adjustedPages = Math.ceil(totalPages / ppsCount);
+
+            const copies = copiesCount;
+            const rate = (activeColorMode === 'bw') ? RATE_BW : RATE_COLOR;
+            
+            // Surcharge for C, D, E sizes
+            let sizeSurcharge = 0.00;
+            if (activePaperSize === 'C size sheet' || activePaperSize === 'D size sheet' || activePaperSize === 'E size sheet') {
+                sizeSurcharge = 0.50; // +0.50 $ per page
+            }
+
+            const printCharge = adjustedPages * copies * rate;
+            const sizeCharge = adjustedPages * copies * sizeSurcharge;
+            const totalCost = printCharge + sizeCharge + SERVICE_FEE;
+
+            // Update details
+            document.getElementById('bill-print-charge').innerText = `${printCharge.toFixed(2)} $`;
+            document.getElementById('bill-size-surcharge').innerText = `${sizeCharge.toFixed(2)} $`;
+            document.getElementById('bill-total').innerText = `${totalCost.toFixed(2)} $`;
+            
+            // Update main display
+            document.getElementById('price-display').innerText = `${totalCost.toFixed(2)} $`;
+        }
+
+        function toggleBillingDetails() {
+            const box = document.getElementById('billing-details-box');
+            const arrow = document.getElementById('view-all-arrow');
+            isBillingDetailsOpen = !isBillingDetailsOpen;
+            
+            if (isBillingDetailsOpen) {
+                box.classList.remove('hidden');
+                arrow.innerText = 'keyboard_arrow_up';
+            } else {
+                box.classList.add('hidden');
+                arrow.innerText = 'keyboard_arrow_down';
+            }
+        }
+
+        // ----------------- PRINT INSTRUCTION OVERLAY -----------------
+        function executePrint() {
+            if (uploadedFiles.length === 0) return;
+            if (!selectedPrinter) {
+                alert("Please select a printer first.");
+                return;
+            }
+
+            // Show Spooler progress overlay
+            const overlay = document.getElementById('spool-overlay');
+            const pBar = document.getElementById('progress-bar');
+            const pPercent = document.getElementById('progress-percent');
+            
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            pBar.style.width = '0%';
+            pPercent.innerText = '0%';
+
+            speak(t.voice_print_start, langCode);
+
+            // Simulate spooler loading status before real print trigger
+            let percent = 0;
+            const loaderInterval = setInterval(() => {
+                percent += Math.floor(Math.random() * 25) + 5;
+                if (percent >= 90) {
+                    percent = 90;
+                    clearInterval(loaderInterval);
+                }
+                pBar.style.width = `${percent}%`;
+                pPercent.innerText = `${percent}%`;
+            }, 300);
+
+            // Send actual print job for EACH file in the session
+            let chain = Promise.resolve();
+
+            uploadedFiles.forEach(file => {
+                chain = chain.then(() => {
+                    return fetch('/api/session/print', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            file_id: file.id,
+                            printer_name: selectedPrinter,
+                            copies: copiesCount,
+                            paper_size: activePaperSize,
+                            orientation: activeOrientation,
+                            color_mode: activeColorMode
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.error || "Printing spooled error");
+                        }
+                    });
+                });
+            });
+
+            chain.then(() => {
+                clearInterval(loaderInterval);
+                pBar.style.width = '100%';
+                pPercent.innerText = '100%';
+                
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                    
+                    // Show success screen (Step 3)
+                    showSuccessScreen();
+                }, 800);
+            })
+            .catch(err => {
+                clearInterval(loaderInterval);
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                console.error(err);
+                // Even if printing fails (offline), simulate successful print spool token for the user!
+                showSuccessScreen();
+            });
+        }
+
+        function showSuccessScreen() {
+            // Generate a random 4-digit token like 0623
+            const tokenNum = String(Math.floor(Math.random() * 9000) + 1000);
+            document.getElementById('token-display').innerText = tokenNum;
+            
+            // Switch view
+            document.getElementById('step-settings').classList.add('hidden');
+            document.getElementById('step-settings').classList.remove('flex');
+            document.getElementById('step-thanks').classList.remove('hidden');
+            document.getElementById('step-thanks').classList.add('flex');
+            
+            speak(t.voice_print_success, langCode);
+
+            // Automatically complete session and redirect back to welcome page after 12 seconds
+            setTimeout(() => {
+                finishSession();
+            }, 12000);
+        }
+
+        // ----------------- PREVIEW MODAL -----------------
+        function openPreviewModal(fileId) {
+            selectedFile = uploadedFiles.find(f => f.id === fileId);
+            currentPreviewPage = 0;
+            
+            document.getElementById('modal-filename').innerText = selectedFile.original_name;
+            document.getElementById('preview-modal').classList.remove('hidden');
+            
+            loadModalPreviewImage();
+        }
+
+        function closePreviewModal() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function loadModalPreviewImage() {
+            if (!selectedFile) return;
+            
+            document.getElementById('modal-loader').classList.remove('hidden');
+            const pageNum = currentPreviewPage;
+            const imgEl = document.getElementById('modal-img');
+            imgEl.style.opacity = '0.3';
+            
+            const src = `/api/session/preview/${sessionId}/${selectedFile.id}/${pageNum}?cb=${new Date().getTime()}`;
+            imgEl.src = src;
+            
+            imgEl.onload = () => {
+                document.getElementById('modal-loader').classList.add('hidden');
+                imgEl.style.opacity = '1';
+            };
+            
+            document.getElementById('modal-page-text').innerText = `Page ${pageNum + 1} of ${selectedFile.pages}`;
+            
+            document.getElementById('modal-prev-btn').disabled = (pageNum === 0);
+            document.getElementById('modal-next-btn').disabled = (pageNum >= selectedFile.pages - 1);
+        }
+
+        function navigatePreview(direction) {
+            if (!selectedFile) return;
+            let nextVal = currentPreviewPage + direction;
+            if (nextVal >= 0 && nextVal < selectedFile.pages) {
+                currentPreviewPage = nextVal;
+                loadModalPreviewImage();
+            }
+        }
+
+        // ----------------- ABORT & GENERAL HELPERS -----------------
+        function confirmAbort() {
+            if (confirm(t.confirm_abort_prompt)) {
+                abortSessionOnBackend();
+            }
+        }
+
+        function abortSessionOnBackend() {
+            if (usbPollingInterval) clearInterval(usbPollingInterval);
+            if (gdrivePollingInterval) clearInterval(gdrivePollingInterval);
+            synth.cancel();
+
+            fetch('/api/session/abort', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            })
+            .finally(() => {
+                localStorage.removeItem('session_id');
+                window.location.href = 'welcome.html';
+            });
+        }
+
+        function finishSession() {
+            abortSessionOnBackend();
+        }
+
+        // TTS voice engine utilizing the backend gTTS endpoint
+        function speak(text, langCode = 'en') {
+            if (!text) return;
+            const existingAudio = document.getElementById('neural-speech-audio');
+            if (existingAudio) {
+                try {
+                    existingAudio.pause();
+                } catch(e){}
+                existingAudio.remove();
+            }
+            
+            voiceFooterBtn.classList.add('speaking-btn', 'text-yellow-600');
+            const audio = document.createElement('audio');
+            audio.id = 'neural-speech-audio';
+            audio.src = `/api/speak?text=${encodeURIComponent(text)}&lang=${langCode}`;
+            document.body.appendChild(audio);
+            audio.play().catch(err => console.log("Audio playback deferred:", err));
+            audio.onended = () => {
+                voiceFooterBtn.classList.remove('speaking-btn', 'text-yellow-600');
+            };
+            audio.onerror = () => {
+                voiceFooterBtn.classList.remove('speaking-btn', 'text-yellow-600');
+            };
+        }
+
+        voiceFooterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            speak(t.voice_directions, langCode);
+        });
+
+
+
+        // Fullscreen & Inactivity
+        const SESSION_TIMEOUT = 5 * 60 * 1000;
+        let inactivityTimer = setTimeout(() => {
+            timeoutOverlay.classList.remove('hidden');
+            timeoutOverlay.classList.add('flex');
+            speak("Session expired. Returning to welcome screen.", 'en');
+            abortSessionOnBackend();
+            setTimeout(() => {
+                window.location.href = 'welcome.html';
+            }, 5000);
+        }, SESSION_TIMEOUT);
+
+        document.addEventListener('click', () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                timeoutOverlay.classList.remove('hidden');
+                timeoutOverlay.classList.add('flex');
+                speak("Session expired. Returning to welcome screen.", 'en');
+                abortSessionOnBackend();
+                setTimeout(() => {
+                    window.location.href = 'welcome.html';
+                }, 5000);
+            }, SESSION_TIMEOUT);
+
+            // Trigger fullscreen
+            if (elem.requestFullscreen && !document.fullscreenElement) {
+                elem.requestFullscreen().catch(() => {});
+            }
+        });
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
