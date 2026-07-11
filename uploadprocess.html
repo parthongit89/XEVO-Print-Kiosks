@@ -3,301 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-PRINT - Upload Process</title>
-    <!-- Fonts -->
+    <title>E-PRINT - Choose Device</title>
+    <!-- Tailwind and Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Capriola&family=Jura:wght@300..700&family=M+PLUS+Rounded+1c:wght@400;700;900&family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     
     <style>
         :root {
             --font-main: 'SN Pro', sans-serif;
-            --font-rounded: 'M PLUS Rounded 1c', sans-serif;
-            --primary-red: #ff5e62;
-            --accent-yellow: #fde047;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-drag: none;
         }
 
         body {
             font-family: var(--font-main);
+            user-select: none;
+            -webkit-user-drag: none;
             background-color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 40px 60px;
-            overflow: hidden;
             cursor: default;
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .dots {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-
-        .dot {
-            width: 15px;
-            height: 15px;
-            background-color: var(--accent-yellow);
-            border-radius: 50%;
-        }
-
-        .dot:nth-child(2) { width: 25px; height: 25px; margin-top: -5px; }
-        .dot:nth-child(3) { width: 12px; height: 12px; }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #000;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .doc-icon {
-            opacity: 0.5;
-        }
-
-        /* Process Grid */
-        .process-grid {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 80px;
-            max-width: 1200px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .option-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .circle-btn {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: #fff;
-            border: 4px solid var(--primary-red);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            padding: 40px;
-        }
-
-        .circle-btn::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 20px;
-            background: white; /* Visual break in circle */
-            z-index: 1;
-        }
-
-        .circle-btn img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            position: relative;
-            z-index: 2;
-        }
-
-        .circle-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 15px 30px rgba(255, 94, 98, 0.2);
-            background-color: #fffafb;
-        }
-
-        .circle-btn:active {
-            transform: scale(0.95);
-        }
-
-        .option-label {
-            font-size: 2rem;
-            font-weight: 900;
-            color: #000;
-            font-family: var(--font-main);
-        }
-
-        /* Footer Section */
-        .footer {
-            margin-top: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding-bottom: 20px;
-        }
-
-        .instructions-list {
-            list-style: none;
-        }
-
-        .instructions-list li {
-            font-size: 1.3rem;
-            color: #333;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-family: var(--font-rounded);
-            font-weight: 500;
-        }
-
-        .instructions-list li::before {
-            content: "•";
-            font-size: 2rem;
-        }
-
-        /* Audio Button */
-        .audio-btn {
-            background-color: var(--accent-yellow);
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-            outline: none;
-        }
-
-        .audio-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .audio-btn svg {
-            width: 40px;
-            height: 40px;
-            fill: #ff5e62;
-        }
-
-        .speaking {
+        .speaking-btn {
             animation: pulse 1.5s infinite;
         }
-
         @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-            50% { transform: scale(1.1); box-shadow: 0 8px 25px rgba(253, 224, 71, 0.5); }
-            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        }
-
-        /* Session Timeout Overlay */
-        #timeout-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #fff;
-            z-index: 9999;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        #timeout-overlay img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 1024px) {
-            .circle-btn { width: 180px; height: 180px; }
-            .process-grid { gap: 40px; }
-            h1 { font-size: 2.2rem; }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col p-8 overflow-hidden select-none">
+
+    <!-- Top Bar Header -->
+    <header class="flex justify-between items-center w-full mb-16">
+        <!-- Controls Box -->
+        <div class="flex items-center gap-2 border border-slate-200 rounded-2xl p-2 bg-white shadow-sm">
+            <!-- Close Button -->
+            <button onclick="abortSession()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Abort Session">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+            <!-- Audio Toggle Button -->
+            <button id="voiceBtn" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Listen instructions">
+                <span class="material-symbols-outlined text-xl">volume_up</span>
+            </button>
+            <!-- Contrast/Theme Toggle Button -->
+            <button onclick="alert('Touchscreen brightness set to maximum kiosk grade.')" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Toggle Theme">
+                <span class="material-symbols-outlined text-xl">light_mode</span>
+            </button>
+            <!-- Refresh Button -->
+            <button onclick="window.location.reload()" class="w-10 h-10 border border-slate-200 hover:bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all active:scale-95" title="Refresh">
+                <span class="material-symbols-outlined text-xl">autorenew</span>
+            </button>
+            
+            <!-- Date Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[110px] text-center" id="date-box">
+                -- -- --
+            </div>
+            <!-- Time Box -->
+            <div class="border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 min-w-[130px] text-center" id="time-box">
+                -- : -- : -- --
+            </div>
+        </div>
+
+        <!-- Right Colored Dots -->
+        <div class="flex gap-2">
+            <div class="w-4 h-4 rounded-full bg-[#ff007f]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#7f00ff]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#007fff]"></div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-grow flex flex-col items-center max-w-6xl w-full mx-auto justify-center -mt-10">
+        <!-- Title -->
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-16 flex items-center gap-2">
+            <span id="title-text">Choose the Device</span>
+            <span class="material-symbols-outlined text-2xl font-bold">settings_input_hdmi</span>
+        </h2>
+
+        <!-- Device Options -->
+        <div class="flex items-center justify-center gap-16 w-full max-w-5xl">
+            <!-- 1. Google Drive -->
+            <div class="flex flex-col items-center gap-6">
+                <button onclick="handleSelection('gdrive')" class="w-72 h-72 rounded-full bg-white hover:bg-slate-50 border border-slate-100 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden p-8 group">
+                    <img src="/templates/gdrive_icon.png" class="w-full h-full object-contain group-hover:scale-105 transition-transform" alt="Google Drive"/>
+                </button>
+                <span class="text-2xl font-extrabold text-slate-500 tracking-tight" id="gdrive-label">Google Drive</span>
+            </div>
+
+            <!-- 2. USB -->
+            <div class="flex flex-col items-center gap-6">
+                <button onclick="handleSelection('usb')" class="w-72 h-72 rounded-full bg-white hover:bg-slate-50 border border-slate-100 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden p-8 group">
+                    <img src="/templates/usb_icon.png" class="w-full h-full object-contain group-hover:scale-105 transition-transform" alt="USB"/>
+                </button>
+                <span class="text-2xl font-extrabold text-slate-500 tracking-tight" id="usb-label">USB</span>
+            </div>
+
+            <!-- 3. TYPE-C -->
+            <div class="flex flex-col items-center gap-6">
+                <button onclick="handleSelection('type-c')" class="w-72 h-72 rounded-full bg-white hover:bg-slate-50 border border-slate-100 flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden p-8 group">
+                    <img src="/templates/type_c_icon.png" class="w-full h-full object-contain group-hover:scale-105 transition-transform" alt="TYPE-C"/>
+                </button>
+                <span class="text-2xl font-extrabold text-slate-500 tracking-tight" id="typec-label">TYPE - C</span>
+            </div>
+        </div>
+    </main>
 
     <!-- Session Timeout Overlay -->
-    <div id="timeout-overlay">
-        <img src="https://i.supaimg.com/d0495ff2-7a2f-426d-a287-7b3b2861a5ee/eab2b984-5640-4a77-a221-f6a3f18b0d50.jpg" alt="Session Expired">
+    <div id="timeout-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center hidden">
+        <img src="https://i.supaimg.com/d0495ff2-7a2f-426d-a287-7b3b2861a5ee/eab2b984-5640-4a77-a221-f6a3f18b0d50.jpg" alt="Session Expired" class="w-full h-full object-cover">
     </div>
 
-    <div class="dots">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-    </div>
-
-    <div class="header">
-        <h1>Select the Document upload process 
-            <span class="doc-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
-            </span>
-        </h1>
-    </div>
-
-    <div class="process-grid">
-        <!-- Folder -->
-        <div class="option-container">
-            <button class="circle-btn" onclick="handleSelection('Folder')">
-                <img src="https://i.supaimg.com/1fd8419f-3f55-4ace-b44b-876a112882c3/da06f84a-ad34-4d7d-83f7-eae1483e0c81.png" alt="Folder">
-            </button>
-            <span class="option-label">Folder</span>
-        </div>
-
-        <!-- USB -->
-        <div class="option-container">
-            <button class="circle-btn" onclick="handleSelection('USB')">
-                <img src="https://i.supaimg.com/1fd8419f-3f55-4ace-b44b-876a112882c3/bad70ce4-21b5-4615-ac91-71eb403fc013.png" alt="USB">
-            </button>
-            <span class="option-label">USB</span>
-        </div>
-
-        <!-- TYPE-C -->
-        <div class="option-container">
-            <button class="circle-btn" onclick="handleSelection('TYPE-C')">
-                <img src="https://i.supaimg.com/1fd8419f-3f55-4ace-b44b-876a112882c3/db2324d9-2b3e-4402-bdaa-1bd7c66b78ac.png" alt="TYPE-C">
-            </button>
-            <span class="option-label">TYPE-C</span>
-        </div>
-    </div>
-
-    <div class="footer">
-        <ul class="instructions-list">
-            <li>Select your suitable device to upload the digital document</li>
-            <li>Choose document type and follow simple steps for printing.</li>
-        </ul>
-        
-        <button class="audio-btn" id="voiceBtn">
-            <svg viewBox="0 0 24 24">
-                <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.01,19.86 21,16.28 21,12C21,7.72 18.01,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.02C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z" />
-            </svg>
-        </button>
-    </div>
-
+    <!-- Script Logic -->
     <script>
         const voiceBtn = document.getElementById('voiceBtn');
         const timeoutOverlay = document.getElementById('timeout-overlay');
@@ -305,69 +124,55 @@
         let synth = window.speechSynthesis;
         let isSpeaking = false;
 
+        const sessionId = localStorage.getItem('session_id') || 'offline_session';
         const lang = localStorage.getItem('selectedLanguage') || 'English';
+
         let langCode = 'en';
         if (lang === 'Hindi') langCode = 'hi';
         if (lang === 'Marathi') langCode = 'mr';
 
-        // Translation Dictionary
+        // Translation Dictionary matching Mockups
         const translations = {
             'English': {
-                heading: "Select the Document upload process",
-                folder: "Folder",
+                title: "Choose the Device",
+                gdrive: "Google Drive",
                 usb: "USB",
-                typeC: "TYPE-C",
-                inst1: "Select your suitable device to upload the digital document",
-                inst2: "Choose document type and follow simple steps for printing.",
-                audio: "Select your suitable device to upload the digital document. You can choose Folder, USB, or Type C cable.",
-                select: "You have selected {type} for upload.",
-                sessionExpired: "Session expired. Returning to welcome page."
+                typec: "TYPE - C",
+                audio: "Select your device to upload the documents. You can choose Google Drive, USB, or Type C cable.",
+                select: "You have selected {type} mode.",
+                sessionExpired: "Session expired. Returning to welcome screen."
             },
             'Hindi': {
-                heading: "दस्तावेज़ अपलोड करने की विधि चुनें",
-                folder: "फ़ोल्डर",
+                title: "डिवाइस चुनें",
+                gdrive: "गूगल ड्राइव",
                 usb: "यूएसबी",
-                typeC: "टाइप-सी",
-                inst1: "डिजिटल दस्तावेज़ अपलोड करने के लिए अपना उपयुक्त डिवाइस चुनें",
-                inst2: "दस्तावेज़ प्रकार चुनें और प्रिंटिंग के लिए सरल चरणों का पालन करें।",
-                audio: "दस्तावेज़ अपलोड करने के लिए अपने डिवाइस का चयन करें। आप फ़ोल्डर, यूएसबी, या टाइप सी केबल चुन सकते हैं।",
-                select: "आपने अपलोड करने के लिए {type} विकल्प चुना है।",
-                sessionExpired: "सत्र समाप्त हो गया है। स्वागत पृष्ठ पर वापस जा रहे हैं।"
+                typec: "टाइप - सी",
+                audio: "दस्तावेज़ अपलोड करने के लिए अपना डिवाइस चुनें। आप गूगल ड्राइव, यूएसबी, या टाइप सी केबल चुन सकते हैं।",
+                select: "आपने {type} मोड चुना है।",
+                sessionExpired: "सत्र समाप्त हो गया है। स्वागत स्क्रीन पर वापस जा रहे हैं।"
             },
             'Marathi': {
-                heading: "दस्तऐवज अपलोड करण्याची पद्धत निवडा",
-                folder: "फोल्डर",
+                title: "डिव्हाइस निवडा",
+                gdrive: "गुगल ड्राईव्ह",
                 usb: "युएसबी",
-                typeC: "टाईप-सी",
-                inst1: "डिजिटल दस्तऐवज अपलोड करण्यासाठी आपले योग्य डिव्हाइस निवडा",
-                inst2: "दस्तऐवज प्रकार निवडा आणि प्रिंटिंगसाठी सोप्या चरणांचे अनुसरण करा.",
-                audio: "दस्तऐवज अपलोड करण्यासाठी आपले योग्य डिव्हाइस निवडा. आपण फोल्डर, यूएसबी किंवा टाईप सी केबल निवडू शकता.",
-                select: "आपण अपलोड करण्यासाठी {type} पर्याय निवडला आहे.",
-                sessionExpired: "सत्र संपले आहे. स्वागत पृष्ठावर परत जात आहे."
+                typec: "टाईप - सी",
+                audio: "दस्तऐवज अपलोड करण्यासाठी आपले डिव्हाइस निवडा. आपण गुगल ड्राईव्ह, यूएसबी, किंवा टाईप सी केबल निवडू शकता.",
+                select: "आपण {type} मोड निवडला आहे.",
+                sessionExpired: "सत्र संपले आहे. स्वागत स्क्रीनवर परत जात आहे."
             }
         };
 
         const t = translations[lang] || translations['English'];
 
-        // Apply translations on load
         document.addEventListener('DOMContentLoaded', () => {
-            const h1 = document.querySelector('.header h1');
-            if (h1 && h1.childNodes.length > 0) {
-                h1.childNodes[0].textContent = t.heading + ' ';
-            }
-            
-            const labels = document.querySelectorAll('.option-label');
-            if (labels.length >= 3) {
-                labels[0].innerText = t.folder;
-                labels[1].innerText = t.usb;
-                labels[2].innerText = t.typeC;
-            }
-            
-            const bullets = document.querySelectorAll('.instructions-list li');
-            if (bullets.length >= 2) {
-                bullets[0].innerText = t.inst1;
-                bullets[1].innerText = t.inst2;
-            }
+            // Apply translations
+            document.getElementById('title-text').innerText = t.title;
+            document.getElementById('gdrive-label').innerText = t.gdrive;
+            document.getElementById('usb-label').innerText = t.usb;
+            document.getElementById('typec-label').innerText = t.typec;
+
+            updateClock();
+            setInterval(updateClock, 1000);
             
             // Speak initial guidance
             setTimeout(() => {
@@ -375,44 +180,26 @@
             }, 600);
         });
 
-        // Session Timer Logic (5 minutes)
-        const SESSION_TIMEOUT = 5 * 60 * 1000; 
-        const REDIRECT_DELAY = 5000; 
-
-        const sessionTimer = setTimeout(() => {
-            timeoutOverlay.style.display = 'flex';
-            speak(t.sessionExpired, langCode);
+        // Clock Update
+        function updateClock() {
+            const now = new Date();
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = String(now.getFullYear()).substring(2);
+            document.getElementById('date-box').innerText = `${day} ${month} ${year}`;
             
-            // Call abort session on backend
-            const sessionId = localStorage.getItem('session_id');
-            if (sessionId) {
-                fetch('/api/session/abort', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sessionId })
-                });
-            }
-
-            setTimeout(() => {
-                window.location.href = 'welcome.html';
-            }, REDIRECT_DELAY);
-        }, SESSION_TIMEOUT);
-
-        // Fullscreen Logic
-        function openFullscreen() {
-            if (document.fullscreenElement) return;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(() => {});
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const strHours = String(hours).padStart(2, '0');
+            document.getElementById('time-box').innerText = `${strHours} : ${minutes} : ${seconds} ${ampm}`;
         }
 
-        document.addEventListener('click', openFullscreen);
-
-        // Local Browser TTS Logic
+        // TTS voice logic
         function speak(text, langCode = 'en') {
             synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
@@ -422,9 +209,9 @@
             if (!preferredVoice) {
                 preferredVoice = voices.find(v => 
                     v.name.toLowerCase().includes('female') || 
-                    v.name.toLowerCase().includes('samantha') || 
-                    v.name.toLowerCase().includes('google us english') ||
-                    v.name.toLowerCase().includes('zira')
+                    v.name.toLowerCase().includes('google us english') || 
+                    v.name.toLowerCase().includes('microsoft zira') ||
+                    v.name.toLowerCase().includes('samantha')
                 );
             }
             
@@ -440,41 +227,17 @@
 
             utterance.onstart = () => {
                 isSpeaking = true;
-                voiceBtn.classList.add('speaking');
+                voiceBtn.classList.add('speaking-btn', 'text-yellow-600');
             };
-
             utterance.onend = () => {
                 isSpeaking = false;
-                voiceBtn.classList.remove('speaking');
+                voiceBtn.classList.remove('speaking-btn', 'text-yellow-600');
             };
-
+            utterance.onerror = () => {
+                isSpeaking = false;
+                voiceBtn.classList.remove('speaking-btn', 'text-yellow-600');
+            };
             synth.speak(utterance);
-        }
-
-        function handleSelection(type) {
-            localStorage.setItem('selectedSource', type);
-            
-            // Translate type name for voice
-            let localizedType = type;
-            if (lang === 'Hindi') {
-                if (type === 'Folder') localizedType = 'फ़ोल्डर';
-                if (type === 'USB') localizedType = 'यूएसबी';
-                if (type === 'TYPE-C') localizedType = 'टाइप-सी';
-            } else if (lang === 'Marathi') {
-                if (type === 'Folder') localizedType = 'फोल्डर';
-                if (type === 'USB') localizedType = 'युएसबी';
-                if (type === 'TYPE-C') localizedType = 'टाईप-सी';
-            }
-            
-            const msg = t.select.replace('{type}', localizedType);
-            speak(msg, langCode);
-            
-            console.log("Selected upload method:", type);
-            
-            // Navigate with delay to allow speech
-            setTimeout(() => {
-                window.location.href = 'folderprocess.html?source=' + type.toLowerCase();
-            }, 1200);
         }
 
         voiceBtn.addEventListener('click', (e) => {
@@ -486,6 +249,54 @@
             synth.onvoiceschanged = () => synth.getVoices();
         }
 
+        function handleSelection(type) {
+            localStorage.setItem('selectedSource', type);
+            
+            // Translate type name for voice confirmation
+            let localizedType = type;
+            if (type === 'gdrive') localizedType = t.gdrive;
+            if (type === 'usb') localizedType = t.usb;
+            if (type === 'type-c') localizedType = t.typec;
+            
+            const msg = t.select.replace('{type}', localizedType);
+            speak(msg, langCode);
+            
+            // Navigate after delay
+            setTimeout(() => {
+                window.location.href = `folderprocess.html?source=${type}`;
+            }, 1200);
+        }
+
+        function abortSession() {
+            fetch('/api/session/abort', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            }).finally(() => {
+                localStorage.removeItem('session_id');
+                window.location.href = 'welcome.html';
+            });
+        }
+
+        // Session Timer (5 minutes)
+        const SESSION_TIMEOUT = 5 * 60 * 1000;
+        const sessionTimer = setTimeout(() => {
+            timeoutOverlay.classList.remove('hidden');
+            timeoutOverlay.classList.add('flex');
+            speak(t.sessionExpired, langCode);
+            abortSession();
+            setTimeout(() => {
+                window.location.href = 'welcome.html';
+            }, 5000);
+        }, SESSION_TIMEOUT);
+
+        function openFullscreen() {
+            if (document.fullscreenElement) return;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            }
+        }
+        document.addEventListener('click', openFullscreen);
         document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
