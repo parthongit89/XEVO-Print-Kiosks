@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to E-PRINT</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --font-main: 'Google Sans Flex', sans-serif;
+            --font-title: 'Google Sans Flex', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* Prevent text selection */
+            -webkit-user-drag: none;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: var(--font-main);
+            cursor: default;
+            border: 16px solid rgba(241, 245, 249, 0.8);
+            border-radius: 40px;
+            box-sizing: border-box;
+        }
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .top-label {
+            font-family: var(--font-main);
+            font-size: 1.25rem;
+            color: #b0b0b0;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        h1 {
+            font-family: var(--font-main);
+            font-size: 5rem;
+            color: #1a1a1a;
+            margin-bottom: 3.5rem;
+            letter-spacing: -1.5px;
+            font-weight: 900;
+        }
+
+        .start-btn {
+            display: inline-block;
+            padding: 18px 90px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-decoration: none;
+            background: #ffffff;
+            border-radius: 20px;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+            cursor: pointer;
+            border: 1.5px solid #eaeaea;
+            font-family: var(--font-main);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 2px 5px rgba(0, 0, 0, 0.02);
+            outline: none;
+            margin-bottom: 4rem;
+        }
+
+        .start-btn:active {
+            transform: scale(0.96);
+            background-color: #fafafa;
+        }
+
+        .start-btn:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.03);
+            background-color: #fafafa;
+        }
+
+        /* Color Dots Indicator */
+        .dots-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .dot-pink { background-color: #ff007f; }
+        .dot-purple { background-color: #7f00ff; }
+        .dot-blue { background-color: #007fff; }
+
+        /* Footer Section */
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 80px);
+            max-width: 1800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666666;
+            font-family: var(--font-main);
+            font-weight: 500;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Fullscreen styles to ensure no gaps */
+        :fullscreen .container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            h1 { font-size: 4rem; }
+            .start-btn { font-size: 1.3rem; padding: 15px 75px; }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 3rem; }
+            .start-btn { font-size: 1.1rem; padding: 12px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <div class="top-label">Self service Kisok system</div>
+        
+        <h1>Welcome to E - Print</h1>
+        
+        <button class="start-btn" id="startBtn">Start</button>
+        
+        <div class="dots-container">
+            <div class="dot dot-pink"></div>
+            <div class="dot dot-purple"></div>
+            <div class="dot dot-blue"></div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-left">
+                <span>Made In India</span>
+                <span>🇮🇳</span>
+            </div>
+            <div>2026 All Rights Reseverd</div>
+            <div>v.1.01Kisok.india</div>
+        </div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const elem = document.documentElement;
+
+        // Function to enter fullscreen
+        function openFullscreen() {
+            if (document.fullscreenElement) return;
+
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => console.log(err));
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+        document.addEventListener('click', function() {
+            openFullscreen();
+        }, { once: false });
+
+        startBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openFullscreen();
+            
+            // Clear previous session data from localStorage
+            localStorage.removeItem('session_id');
+            localStorage.removeItem('selectedLanguage');
+            localStorage.removeItem('selectedSource');
+
+            startBtn.innerText = 'Starting...';
+            startBtn.disabled = true;
+
+            // Start a new session on the backend
+            fetch('/api/session/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('session_id', data.session_id);
+                    setTimeout(() => {
+                        window.location.href = 'language.html';
+                    }, 150);
+                } else {
+                    alert('Failed to start kiosk session. Please try again.');
+                    startBtn.innerText = 'Start';
+                    startBtn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error('Error starting session:', err);
+                localStorage.setItem('session_id', 'offline_session');
+                setTimeout(() => {
+                    window.location.href = 'language.html';
+                }, 150);
+            });
+        });
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                openFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
