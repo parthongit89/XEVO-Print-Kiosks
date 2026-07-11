@@ -634,6 +634,27 @@ def print_document():
     finally:
         win32print.ClosePrinter(hprinter)
 
+@app.route('/api/speak', methods=['GET'])
+def speak_text():
+    from gtts import gTTS
+    import io
+    text = request.args.get('text', '')
+    lang = request.args.get('lang', 'en')
+    if not text:
+        return "Missing text", 400
+    try:
+        # Simplify complex lang tags (e.g. en-US -> en, ar-EG -> ar)
+        gtts_lang = lang.split('-')[0].split('_')[0]
+        # Map specific codes if necessary (e.g., standard mapping for gtts)
+        tts = gTTS(text=text, lang=gtts_lang, slow=False)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        return send_file(fp, mimetype='audio/mp3')
+    except Exception as e:
+        print("gTTS generation error:", e)
+        return str(e), 500
+
 if __name__ == '__main__':
     # Running locally on port 5000
     print("XEVO Print Kiosk backend initialized.")
