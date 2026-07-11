@@ -4,6 +4,9 @@ import shutil
 import glob
 import sys
 import tempfile
+import re
+import json
+import urllib.request
 from flask import Flask, request, jsonify, send_from_directory, send_file
 import fitz  # PyMuPDF
 from PIL import Image, ImageWin, ImageOps
@@ -148,10 +151,35 @@ def detect_usb():
         "files": usb_files
     })
 
+# Helper to record files in session metadata.json
+def write_metadata_files(session_path, new_files):
+    metadata_path = os.path.join(session_path, "metadata.json")
+    metadata = {}
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+        except:
+            pass
+            
+    files_list = metadata.get("files", [])
+    for nf in new_files:
+        if not any(f.get("id") == nf.get("id") for f in files_list):
+            files_list.append(nf)
+            
+    metadata["files"] = files_list
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=4)
+
 # ----------------- UPLOAD / IMPORT FILE -----------------
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     session_id = request.form.get('session_id')
+    if not session_id:
+        # Fallback to json if POSTed as JSON (for local USB copy)
+        data = request.json or {}
+        session_id = data.get('session_id')
+        
     if not session_id:
         return jsonify({"success": False, "error": "No session ID provided"})
         
@@ -171,15 +199,18 @@ def upload_file():
                 dest_path = os.path.join(session_path, safe_name)
                 file.save(dest_path)
                 
-                # Get metadata
                 page_count = get_page_count(dest_path)
-                saved_files.append({
+                file_info = {
                     "id": file_id,
                     "original_name": file.filename,
+                    "local_name": safe_name,
                     "size": os.path.getsize(dest_path),
                     "formatted_size": format_size(os.path.getsize(dest_path)),
                     "pages": page_count
-                })
+                }
+                saved_files.append(file_info)
+                
+        write_metadata_files(session_path, saved_files)
         return jsonify({"success": True, "files": saved_files})
 
     # 2. Check if importing from local path (USB copy)
@@ -194,20 +225,205 @@ def upload_file():
         try:
             shutil.copy2(source_path, dest_path)
             page_count = get_page_count(dest_path)
+            file_info = {
+                "id": file_id,
+                "original_name": filename,
+                "local_name": safe_name,
+                "size": os.path.getsize(dest_path),
+                "formatted_size": format_size(os.path.getsize(dest_path)),
+                "pages": page_count
+            }
+            write_metadata_files(session_path, [file_info])
             return jsonify({
                 "success": True,
-                "files": [{
-                    "id": file_id,
-                    "original_name": filename,
-                    "size": os.path.getsize(dest_path),
-                    "formatted_size": format_size(os.path.getsize(dest_path)),
-                    "pages": page_count
-                }]
+                "files": [file_info]
             })
         except Exception as e:
             return jsonify({"success": False, "error": str(e)})
 
     return jsonify({"success": False, "error": "No file contents or source path found"})
+
+# ----------------- SESSION FILES LIST & SYNC -----------------
+@app.route('/api/session/files/<session_id>', methods=['GET'])
+def get_session_files(session_id):
+    session_path = os.path.join(SESSION_DIR, f"session_{session_id}")
+    metadata_path = os.path.join(session_path, "metadata.json")
+    
+    if not os.path.exists(session_path):
+        return jsonify({"success": True, "files": []})
+        
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+                files = metadata.get("files", [])
+                
+                # Filter out files that no longer exist
+                active_files = []
+                for f_info in files:
+                    l_name = f_info.get("local_name", f"{f_info['id']}{os.path.splitext(f_info['original_name'])[1].lower()}")
+                    if os.path.exists(os.path.join(session_path, l_name)):
+                        active_files.append(f_info)
+                return jsonify({"success": True, "files": active_files})
+        except Exception as e:
+            print("Error loading metadata:", e)
+            
+    # Fallback directly to scanning session dir
+    files = []
+    for filename in os.listdir(session_path):
+        if filename in ["previews", "metadata.json"] or os.path.isdir(os.path.join(session_path, filename)):
+            continue
+        file_id = os.path.splitext(filename)[0]
+        filepath = os.path.join(session_path, filename)
+        pages = get_page_count(filepath)
+        size = os.path.getsize(filepath)
+        files.append({
+            "id": file_id,
+            "original_name": filename,
+            "local_name": filename,
+            "size": size,
+            "formatted_size": format_size(size),
+            "pages": pages
+        })
+    return jsonify({"success": True, "files": files})
+
+@app.route('/api/session/gdrive_sync', methods=['POST'])
+def gdrive_sync():
+    data = request.json or {}
+    session_id = data.get('session_id')
+    folder_url = data.get('folder_url')
+    
+    if not session_id or not folder_url:
+        return jsonify({"success": False, "error": "Missing parameters"})
+        
+    session_path = os.path.join(SESSION_DIR, f"session_{session_id}")
+    if not os.path.exists(session_path):
+        os.makedirs(session_path, exist_ok=True)
+        
+    # Extract folder ID
+    m = re.search(r'folders/([a-zA-Z0-9_-]{20,})', folder_url)
+    if not m:
+        return jsonify({"success": False, "error": "Invalid Google Drive folder URL"})
+    folder_id = m.group(1)
+    
+    # Fetch folder HTML
+    try:
+        req = urllib.request.Request(
+            folder_url,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        )
+        with urllib.request.urlopen(req) as response:
+            html = response.read().decode('utf-8', errors='ignore')
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Failed to fetch Google Drive folder page: {str(e)}"})
+        
+    # Extract files list using regular expression
+    pattern = r'\\x22([a-zA-Z0-9_-]{20,})\\x22,\\x5b\\x22([a-zA-Z0-9_-]{20,})\\x22\\x5d,\\x22([a-zA-Z0-9_\-\. \(\)]+\.[a-zA-Z0-9]+)\\x22'
+    matches = re.findall(pattern, html)
+    
+    # Load metadata
+    metadata_path = os.path.join(session_path, "metadata.json")
+    metadata = {}
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+        except:
+            pass
+            
+    files_list = metadata.get("files", [])
+    new_files = []
+    
+    # Process each matched file
+    for file_id, f_id, filename in matches:
+        if f_id != folder_id:
+            continue
+            
+        # Check if already imported
+        already_exists = any(f.get("original_name") == filename for f in files_list)
+        if already_exists:
+            continue
+            
+        # Download file from Google Drive uc endpoint
+        download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+        file_uuid = str(uuid.uuid4())[:8]
+        ext = os.path.splitext(filename)[1].lower()
+        safe_name = f"{file_uuid}{ext}"
+        dest_path = os.path.join(session_path, safe_name)
+        
+        try:
+            download_req = urllib.request.Request(
+                download_url,
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+            )
+            with urllib.request.urlopen(download_req) as dl_res:
+                content = dl_res.read()
+                
+            with open(dest_path, 'wb') as f:
+                f.write(content)
+                
+            page_count = get_page_count(dest_path)
+            stat = os.stat(dest_path)
+            
+            file_info = {
+                "id": file_uuid,
+                "original_name": filename,
+                "local_name": safe_name,
+                "size": stat.st_size,
+                "formatted_size": format_size(stat.st_size),
+                "pages": page_count,
+                "gdrive_file_id": file_id
+            }
+            files_list.append(file_info)
+            new_files.append(file_info)
+            
+        except Exception as dl_err:
+            print(f"Failed to download public Drive file {filename} ({file_id}): {dl_err}")
+            
+    # Save metadata
+    metadata["files"] = files_list
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=4)
+        
+    return jsonify({"success": True, "files": files_list, "new_count": len(new_files)})
+
+@app.route('/api/session/delete', methods=['POST'])
+def delete_file():
+    data = request.json or {}
+    session_id = data.get('session_id')
+    file_id = data.get('file_id')
+    
+    if not session_id or not file_id:
+        return jsonify({"success": False, "error": "Missing parameters"})
+        
+    session_path = os.path.join(SESSION_DIR, f"session_{session_id}")
+    if not os.path.exists(session_path):
+        return jsonify({"success": False, "error": "Session not found"})
+        
+    # Delete local files
+    pattern = os.path.join(session_path, f"{file_id}.*")
+    matches = glob.glob(pattern)
+    for f in matches:
+        if os.path.basename(f) != "metadata.json" and not os.path.isdir(f):
+            try:
+                os.remove(f)
+            except Exception as e:
+                print("Error deleting local file:", e)
+                
+    # Update metadata
+    metadata_path = os.path.join(session_path, "metadata.json")
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+            files = metadata.get("files", [])
+            metadata["files"] = [f for f in files if f.get("id") != file_id]
+            with open(metadata_path, 'w', encoding='utf-8') as f:
+                json.dump(metadata, f, indent=4)
+        except Exception as e:
+            print("Error updating metadata.json on delete:", e)
+            
+    return jsonify({"success": True})
 
 def get_page_count(filepath):
     ext = os.path.splitext(filepath)[1].lower()
