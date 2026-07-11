@@ -79,59 +79,55 @@
     </header>
 
     <!-- STEP 1: UPLOAD / DEVICE CONNECTION VIEW -->
-    <div id="step-upload" class="flex-grow flex p-2 gap-8 max-w-7xl w-full mx-auto overflow-hidden">
+    <div id="step-upload" class="flex-grow flex p-2 gap-10 max-w-7xl w-full mx-auto overflow-hidden">
         
-        <!-- Left Column: Device Graphic / Instruction Card -->
-        <div class="w-1/2 bg-white border border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center shadow-sm text-center">
-            
-            <!-- Dynamic Image based on source -->
-            <div class="w-80 h-80 flex items-center justify-center mb-8 border border-slate-100 rounded-3xl p-4 shadow-sm" id="device-graphic-wrapper">
-                <img id="device-graphic" src="" class="max-w-full max-h-full object-contain" alt="Device"/>
-            </div>
-
-            <!-- Instruction Text -->
-            <p class="text-xl font-bold text-slate-700 max-w-md leading-relaxed" id="device-instruction">
-                --
-            </p>
-
-            <!-- Hidden File Input for local file picker simulation -->
-            <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.png,.jpg,.jpeg"/>
-        </div>
-
-        <!-- Right Column: Document List Box -->
-        <div class="w-1/2 bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between shadow-sm overflow-hidden">
-            <div class="flex flex-col h-full overflow-hidden">
-                <!-- Header -->
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-                    <span class="text-sm font-black text-slate-900 tracking-tight" id="all-files-title">All files appear here</span>
-                    <button onclick="confirmAbort()" class="text-slate-400 hover:text-red-500">
-                        <span class="material-symbols-outlined text-lg">cancel</span>
-                    </button>
+        <!-- Left Column: Device Graphic / Instruction Card + Action Buttons -->
+        <div class="w-[38%] flex flex-col gap-6 h-full overflow-hidden">
+            <!-- Connection Card -->
+            <div class="flex-grow bg-white border border-slate-200 rounded-[20px] p-8 flex flex-col items-center justify-center shadow-sm text-center relative">
+                <!-- Dynamic Image based on source -->
+                <div class="w-72 h-72 flex items-center justify-center mb-6" id="device-graphic-wrapper">
+                    <img id="device-graphic" src="" class="max-w-full max-h-full object-contain" alt="Device"/>
                 </div>
 
-                <!-- Files List Area -->
-                <div class="flex-grow overflow-y-auto divide-y divide-slate-100 pr-2" id="files-list-container">
-                    <!-- Empty State Placeholder -->
-                    <div id="empty-files-state" class="h-full flex flex-col items-center justify-center text-slate-400 gap-2 py-10">
-                        <span class="material-symbols-outlined text-4xl">folder</span>
-                        <p class="text-sm font-bold">No files uploaded yet</p>
-                        <!-- G-Drive Mock Uploader or trigger selection -->
-                        <button onclick="triggerFileSelect()" class="mt-4 px-6 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs shadow-sm transition-all active:scale-95">
-                            Simulate Upload
-                        </button>
-                    </div>
-                </div>
+                <!-- Instruction Text -->
+                <p class="text-base text-slate-800 leading-relaxed font-sans max-w-xs" id="device-instruction">
+                    --
+                </p>
+
+                <!-- Hidden File Input for local file picker simulation -->
+                <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.png,.jpg,.jpeg"/>
             </div>
 
-            <!-- Bottom Actions Row -->
-            <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-4">
-                <button onclick="window.location.reload()" class="px-8 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
+            <!-- Bottom Action Row under connection card -->
+            <div class="flex gap-4">
+                <!-- Refresh Button -->
+                <button onclick="window.location.reload()" class="flex-1 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-lg">autorenew</span>
                     <span>Refresh</span>
                 </button>
-                <button onclick="goToSettingsStep()" id="next-to-settings-btn" disabled class="px-10 py-3.5 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-bold flex items-center gap-2 transition-all cursor-not-allowed">
+                <!-- Print Button -->
+                <button onclick="goToSettingsStep()" id="next-to-settings-btn" disabled class="flex-1 py-4 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-not-allowed">
                     <span class="material-symbols-outlined text-lg">local_printshop</span>
                     <span>Print</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Column: Document List Stack -->
+        <div class="w-[58%] flex flex-col h-full overflow-y-auto pr-2 gap-4" id="files-list-container">
+            <!-- Header Card -->
+            <div class="bg-white border border-slate-200 rounded-xl px-6 py-4 flex items-center justify-between shadow-sm">
+                <span class="text-sm font-extrabold text-slate-800 tracking-tight" id="all-files-title">All files appear here</span>
+                <span class="material-symbols-outlined text-slate-400 text-lg cursor-pointer" onclick="confirmAbort()">close</span>
+            </div>
+
+            <!-- Empty State Placeholder -->
+            <div id="empty-files-state" class="flex-grow bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2 py-16 shadow-sm">
+                <span class="material-symbols-outlined text-4xl text-slate-300">folder</span>
+                <p class="text-sm font-bold text-slate-400">No files uploaded yet</p>
+                <button onclick="triggerFileSelect()" class="mt-4 px-6 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs shadow-sm transition-all active:scale-95 cursor-pointer">
+                    Simulate Upload
                 </button>
             </div>
         </div>
@@ -143,125 +139,129 @@
         
         <!-- Files selected pill row -->
         <div class="flex flex-wrap gap-3 mb-6 max-h-24 overflow-y-auto p-1" id="selected-files-pills">
-            <!-- Dynamic pills like: [Document 1.pdf x] -->
+            <!-- Dynamic pills loaded here -->
         </div>
 
         <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex-grow flex flex-col justify-between overflow-y-auto mb-6">
             
             <div class="flex flex-col gap-6">
                 <!-- 1. Number of copies -->
-                <div class="flex items-center justify-between">
-                    <label class="text-base font-bold text-slate-700">Number of copies</label>
-                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-slate-50 w-64 h-12">
-                        <button onclick="adjustCopies(1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">+</button>
-                        <input type="number" id="copies-input" value="1" min="1" class="w-full bg-transparent border-0 text-center font-extrabold text-lg p-0 focus:ring-0 text-slate-800"/>
-                        <button onclick="adjustCopies(-1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">-</button>
+                <div class="flex flex-col mb-2">
+                    <label class="text-base font-extrabold text-slate-800 mb-2">Number of copies</label>
+                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-white w-full max-w-xl h-14 shadow-sm">
+                        <button onclick="adjustCopies(1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">+</button>
+                        <input type="number" id="copies-input" value="1" min="1" class="w-full bg-transparent border-0 text-center font-black text-lg p-0 focus:ring-0 text-slate-800" readonly/>
+                        <button onclick="adjustCopies(-1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">-</button>
                     </div>
                 </div>
 
                 <!-- 2. Paper per Sheet -->
-                <div class="flex items-center justify-between">
-                    <label class="text-base font-bold text-slate-700">Paper per Sheet</label>
-                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-slate-50 w-64 h-12">
-                        <button onclick="adjustPagesPerSheet(1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">+</button>
-                        <input type="number" id="pps-input" value="1" min="1" max="4" class="w-full bg-transparent border-0 text-center font-extrabold text-lg p-0 focus:ring-0 text-slate-800" readonly/>
-                        <button onclick="adjustPagesPerSheet(-1)" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-100 border border-slate-200 shadow-sm font-bold text-xl active:scale-95 transition-all">-</button>
+                <div class="flex flex-col mb-2">
+                    <label class="text-base font-extrabold text-slate-800 mb-2">Paper per Sheet</label>
+                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-1 bg-white w-full max-w-xl h-14 shadow-sm">
+                        <button onclick="adjustPagesPerSheet(1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">+</button>
+                        <input type="number" id="pps-input" value="1" min="1" max="4" class="w-full bg-transparent border-0 text-center font-black text-lg p-0 focus:ring-0 text-slate-800" readonly/>
+                        <button onclick="adjustPagesPerSheet(-1)" class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 hover:bg-slate-50 font-bold text-xl active:scale-95 transition-all border border-slate-100 cursor-pointer">-</button>
                     </div>
                 </div>
 
                 <!-- 3. Paper Size -->
                 <div class="flex flex-col gap-2">
-                    <label class="text-sm font-bold text-slate-400 uppercase tracking-wider">Paper Size</label>
-                    <div class="flex flex-wrap gap-3">
-                        <button onclick="setPaperSize('A4')" id="size-btn-A4" class="px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all">A4</button>
-                        <button onclick="setPaperSize('A5')" id="size-btn-A5" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">A5</button>
-                        <button onclick="setPaperSize('Letter')" id="size-btn-Letter" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">Letter</button>
-                        <button onclick="setPaperSize('Legal')" id="size-btn-Legal" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">Legal</button>
-                        <button onclick="setPaperSize('Statement')" id="size-btn-Statement" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">Statement</button>
-                        <button onclick="setPaperSize('C size sheet')" id="size-btn-C" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">C size sheet</button>
-                        <button onclick="setPaperSize('D size sheet')" id="size-btn-D" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">D size sheet</button>
-                        <button onclick="setPaperSize('E size sheet')" id="size-btn-E" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all">E size sheet</button>
+                    <label class="text-base font-extrabold text-slate-800">Paper Size</label>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="setPaperSize('A4')" id="size-btn-A4" class="px-6 py-2.5 bg-white border-2 border-slate-800 text-slate-800 font-extrabold rounded-xl shadow-sm text-sm active:scale-95 transition-all cursor-pointer">A4</button>
+                            <button onclick="setPaperSize('A5')" id="size-btn-A5" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">A5</button>
+                            <button onclick="setPaperSize('Letter')" id="size-btn-Letter" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">Letter</button>
+                            <button onclick="setPaperSize('Legal')" id="size-btn-Legal" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">Legal</button>
+                            <button onclick="setPaperSize('Statement')" id="size-btn-Statement" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">Statement</button>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="setPaperSize('C size sheet')" id="size-btn-C" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">C size sheet</button>
+                            <button onclick="setPaperSize('D size sheet')" id="size-btn-D" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">D size sheet</button>
+                            <button onclick="setPaperSize('E size sheet')" id="size-btn-E" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-500 font-extrabold rounded-xl text-sm hover:border-slate-300 active:scale-95 transition-all cursor-pointer">E size sheet</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 4. Layout & Mode -->
+                <!-- 4. Layout -->
                 <div class="flex flex-col gap-2">
-                    <label class="text-sm font-bold text-slate-400 uppercase tracking-wider">Layout</label>
+                    <label class="text-base font-extrabold text-slate-800">Layout</label>
                     <div class="flex items-center gap-10">
                         <!-- Portrait / Landscape -->
-                        <div class="flex border border-slate-200 bg-slate-50 p-1 rounded-xl w-64 h-12">
-                            <button onclick="setOrientation('portrait')" id="btn-orient-port" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all">Portrait</button>
-                            <button onclick="setOrientation('landscape')" id="btn-orient-land" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all">Landscape</button>
+                        <div class="flex border border-slate-200 bg-white p-1 rounded-xl w-64 h-12 shadow-sm">
+                            <button onclick="setOrientation('portrait')" id="btn-orient-port" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black text-slate-900 active:scale-95 transition-all cursor-pointer">Portrait</button>
+                            <button onclick="setOrientation('landscape')" id="btn-orient-land" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all cursor-pointer">Landscape</button>
                         </div>
 
                         <!-- Color / B&W -->
-                        <div class="flex border border-slate-200 bg-slate-50 p-1 rounded-xl w-64 h-12">
-                            <button onclick="setColorMode('color')" id="btn-color" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all">
+                        <div class="flex border border-slate-200 bg-white p-1 rounded-xl w-64 h-12 shadow-sm">
+                            <button onclick="setColorMode('color')" id="btn-color" class="flex-1 bg-white shadow-sm border border-slate-200 rounded-lg text-xs font-black active:scale-95 transition-all cursor-pointer">
                                 <span class="text-[#007fff]">C</span><span class="text-[#ff007f]">o</span><span class="text-[#7f00ff]">l</span><span class="text-[#facc15]">o</span><span class="text-[#10b981]">r</span>
                             </button>
-                            <button onclick="setColorMode('bw')" id="btn-bw" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all">B&W</button>
+                            <button onclick="setColorMode('bw')" id="btn-bw" class="flex-1 text-slate-500 rounded-lg text-xs font-bold hover:text-slate-800 active:scale-95 transition-all cursor-pointer">B&W</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Optional: Printer selector hidden or simplified to system default -->
-                <div class="flex items-center justify-between border-t border-slate-100 pt-4">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Printer</label>
-                    <select id="printer-select" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-bold text-slate-700 text-xs focus:ring-0 w-64">
-                        <option value="">Detecting printers...</option>
-                    </select>
+                <div class="hidden">
+                    <select id="printer-select"><option value="Default">Default</option></select>
                 </div>
             </div>
 
-            <!-- Pricing Details Expanded (View all) -->
+            <!-- Bottom cost & checkout segment -->
             <div class="mt-8 border-t border-slate-100 pt-6">
-                <!-- Dropdown Card -->
-                <div id="billing-details-box" class="hidden w-full border border-slate-200 rounded-2xl p-6 bg-slate-50/50 mb-4 transition-all">
+                <!-- Dropdown Billing details box -->
+                <div id="billing-details-box" class="hidden w-full max-w-xl mx-auto border-[4px] border-slate-200 rounded-2xl p-6 bg-white mb-6">
                     <div class="flex flex-col gap-3 font-semibold text-sm text-slate-600">
-                        <div class="flex justify-between">
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
                             <span>Print Charge</span>
                             <span id="bill-print-charge">0.00 $</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
                             <span>Custom Print Charge</span>
                             <span>0.00 $</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
                             <span>Size</span>
                             <span id="bill-size-surcharge">0.00 $</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between border-b border-dashed border-slate-200 pb-2">
                             <span>Service</span>
                             <span>0.20 $</span>
                         </div>
-                        <div class="border-t border-slate-200 pt-3 flex justify-between font-black text-slate-900">
+                        <div class="pt-2 flex justify-between font-black text-lg text-slate-900">
                             <span>Total</span>
                             <span id="bill-total">0.20 $</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center mb-6">
-                    <button onclick="toggleBillingDetails()" class="text-slate-500 hover:text-slate-800 font-extrabold text-sm flex items-center gap-1 active:scale-95 transition-all">
-                        <span>View all</span>
-                        <span class="material-symbols-outlined text-lg" id="view-all-arrow">keyboard_arrow_down</span>
+                <!-- Billing Action Row -->
+                <div class="flex justify-between items-center w-full max-w-4xl mx-auto">
+                    <!-- Left Action Button: Refresh -->
+                    <button onclick="window.location.reload()" class="w-48 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">autorenew</span>
+                        <span>Refresh</span>
                     </button>
-                    <span class="text-4xl font-black text-slate-900 font-title" id="price-display">0.20 $</span>
+
+                    <!-- Center Price Display -->
+                    <div class="flex flex-col items-center">
+                        <span class="text-5xl font-black text-slate-900 tracking-tight" id="price-display">0.20 $</span>
+                        <button onclick="toggleBillingDetails()" class="mt-2 text-slate-500 hover:text-slate-800 font-extrabold text-sm flex items-center gap-1 active:scale-95 transition-all cursor-pointer">
+                            <span>View all</span>
+                            <span class="material-symbols-outlined text-lg" id="view-all-arrow">keyboard_arrow_down</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Action Button: Print -->
+                    <button onclick="executePrint()" class="w-48 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">local_printshop</span>
+                        <span>Print</span>
+                    </button>
                 </div>
             </div>
 
-        </div>
-
-        <!-- Bottom Actions Step 2 -->
-        <div class="flex justify-between items-center w-full px-2">
-            <button onclick="goToUploadStep()" class="px-8 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
-                <span class="material-symbols-outlined text-lg">arrow_back</span>
-                <span>Back</span>
-            </button>
-            <button onclick="executePrint()" class="px-10 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95">
-                <span class="material-symbols-outlined text-lg">local_printshop</span>
-                <span>Print</span>
-            </button>
         </div>
 
     </div>
@@ -285,11 +285,6 @@
                 <div class="w-4 h-4 rounded-full bg-[#7f00ff]"></div>
                 <div class="w-4 h-4 rounded-full bg-[#007fff]"></div>
             </div>
-
-            <!-- Done Button -->
-            <button onclick="finishSession()" class="px-12 py-4 bg-white border border-slate-200 rounded-3xl shadow-md text-slate-800 font-extrabold text-lg hover:bg-slate-50 active:scale-95 transition-all">
-                Done
-            </button>
         </div>
     </div>
 
@@ -574,103 +569,64 @@
                     if (data.success && data.detected && data.files.length > 0) {
                         // Automatically import USB files for simplicity, or simulate import
                         // For the exact template wise design, we display a mock or imported file list.
-                        // We will auto-import first detected USB file as demonstration
-                        const unimported = data.files.filter(uf => !uploadedFiles.some(f => f.original_name === uf.name));
-                        if (unimported.length > 0) {
-                            importUSBFile(unimported[0].path);
-                        }
-                    }
-                })
-                .catch(err => console.error("USB scan error:", err));
-        }
-
-        function importUSBFile(filePath) {
-            fetch('/api/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    session_id: sessionId,
-                    source_path: filePath
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    uploadedFiles = [...uploadedFiles, ...data.files];
-                    renderFilesList();
-                }
-            })
-            .catch(err => console.error("USB Import error:", err));
-        }
-
-        // ----------------- FILE UPLOADER -----------------
-        function setupFileUploader() {
-            const fileInput = document.getElementById('file-input');
-            fileInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files);
-                if (files.length > 0) uploadFiles(files);
-            });
-        }
-
-        function uploadFiles(files) {
-            const formData = new FormData();
-            formData.append('session_id', sessionId);
-            files.forEach(f => formData.append('files', f));
-
-            fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    uploadedFiles = [...uploadedFiles, ...data.files];
-                    renderFilesList();
-                } else {
-                    alert("Upload failed: " + data.error);
-                }
-            })
-            .catch(err => console.error("Upload error:", err));
-        }
-
-        // Render files list on right side
+         // Render files list on right side
         function renderFilesList() {
             const container = document.getElementById('files-list-container');
-            container.innerHTML = '';
+            container.innerHTML = `
+                <!-- Header Card -->
+                <div class="bg-white border border-slate-200 rounded-xl px-6 py-4 flex items-center justify-between shadow-sm">
+                    <span class="text-sm font-extrabold text-slate-800 tracking-tight" id="all-files-title">All files appear here</span>
+                    <span class="material-symbols-outlined text-slate-400 text-lg cursor-pointer" onclick="confirmAbort()">close</span>
+                </div>
+            `;
 
             if (uploadedFiles.length === 0) {
-                container.appendChild(document.getElementById('empty-files-state'));
-                document.getElementById('next-to-settings-btn').disabled = true;
-                document.getElementById('next-to-settings-btn').className = "px-10 py-3.5 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-bold flex items-center gap-2 transition-all cursor-not-allowed";
+                const emptyCard = document.createElement('div');
+                emptyCard.id = "empty-files-state";
+                emptyCard.className = "flex-grow bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2 py-16 shadow-sm";
+                emptyCard.innerHTML = `
+                    <span class="material-symbols-outlined text-4xl text-slate-300">folder</span>
+                    <p class="text-sm font-bold text-slate-400">No files uploaded yet</p>
+                    <button onclick="triggerFileSelect()" class="mt-4 px-6 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold rounded-full text-xs shadow-sm transition-all active:scale-95 cursor-pointer">
+                        Simulate Upload
+                    </button>
+                `;
+                container.appendChild(emptyCard);
+                
+                // Disable print button
+                const printBtn = document.getElementById('next-to-settings-btn');
+                printBtn.disabled = true;
+                printBtn.className = "flex-1 py-4 bg-slate-200 text-slate-400 rounded-2xl shadow-sm text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-not-allowed";
                 return;
             }
 
             // Enable Print (next) button
-            document.getElementById('next-to-settings-btn').disabled = false;
-            document.getElementById('next-to-settings-btn').className = "px-10 py-3.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-2xl shadow-sm text-sm font-bold flex items-center gap-2 transition-all active:scale-95 cursor-pointer";
+            const printBtn = document.getElementById('next-to-settings-btn');
+            printBtn.disabled = false;
+            printBtn.className = "flex-1 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-extrabold text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer";
 
             uploadedFiles.forEach(file => {
-                const row = document.createElement('div');
-                row.className = "flex items-center justify-between py-4 border-b border-slate-100 group";
-                row.innerHTML = `
+                const fileCard = document.createElement('div');
+                fileCard.className = "bg-white border border-slate-200 rounded-xl px-6 py-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all";
+                fileCard.innerHTML = `
                     <div class="flex items-center gap-3 overflow-hidden">
                         <span class="material-symbols-outlined text-slate-400">draft</span>
                         <div class="overflow-hidden">
-                            <p class="text-sm font-bold text-slate-700 truncate max-w-[200px]" title="${file.original_name}">${file.original_name}</p>
+                            <p class="text-sm font-bold text-slate-800 truncate max-w-[280px]" title="${file.original_name}">${file.original_name}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
                         <!-- Preview Button -->
-                        <button onclick="openPreviewModal('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors">
+                        <button onclick="openPreviewModal('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer">
                             <span class="material-symbols-outlined text-lg">visibility</span>
                         </button>
                         <!-- Delete Button -->
-                        <button onclick="removeUploadedFile('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
+                        <button onclick="removeUploadedFile('${file.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
                             <span class="material-symbols-outlined text-lg">delete</span>
                         </button>
                     </div>
                 `;
-                container.appendChild(row);
+                container.appendChild(fileCard);
             });
 
             calculatePrice();
@@ -998,6 +954,11 @@
             document.getElementById('step-thanks').classList.add('flex');
             
             speak(t.voice_print_success, langCode);
+
+            // Automatically complete session and redirect back to welcome page after 12 seconds
+            setTimeout(() => {
+                finishSession();
+            }, 12000);
         }
 
         // ----------------- PREVIEW MODAL -----------------
